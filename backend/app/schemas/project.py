@@ -1,9 +1,11 @@
 from decimal import Decimal
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.activity import ActivityWithIndicators
 from app.services.evm.enums import CpiStatus, SpiStatus
+from app.services.evm.indicators import ProjectConsolidatedIndicators
 
 PROJECT_NAME_MAX_LENGTH = 200
 
@@ -38,6 +40,27 @@ class ProjectConsolidatedIndicatorsSchema(BaseModel):
     cpi_message: str
     spi_status: SpiStatus
     spi_message: str
+
+    @classmethod
+    def from_domain(cls, consolidated: ProjectConsolidatedIndicators) -> Self:
+        """Aplana el `ProjectConsolidatedIndicators` del service al contrato
+        plano del API."""
+        return cls(
+            total_bac=consolidated.total_bac,
+            total_pv=consolidated.total_pv,
+            total_ev=consolidated.total_ev,
+            total_ac=consolidated.total_ac,
+            cv=consolidated.cv,
+            sv=consolidated.sv,
+            cpi=consolidated.cpi,
+            spi=consolidated.spi,
+            eac=consolidated.eac,
+            vac=consolidated.vac,
+            cpi_status=consolidated.cpi_interpretation.status,
+            cpi_message=consolidated.cpi_interpretation.message,
+            spi_status=consolidated.spi_interpretation.status,
+            spi_message=consolidated.spi_interpretation.message,
+        )
 
 
 class ProjectDetail(ProjectRead):

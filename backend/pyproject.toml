@@ -48,6 +48,12 @@ ignore = []
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
 
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI usa `Depends(...)` como valor por defecto de parámetro por diseño
+# (es la forma en que declara la inyección de dependencias); no es el patrón
+# de "mutable default argument" que B008 busca prevenir.
+extend-immutable-calls = ["fastapi.Depends"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

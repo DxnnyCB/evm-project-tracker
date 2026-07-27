@@ -1,8 +1,10 @@
 from decimal import Decimal
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.services.evm.enums import CpiStatus, SpiStatus
+from app.services.evm.indicators import ActivityIndicators
 
 ACTIVITY_NAME_MAX_LENGTH = 200
 
@@ -48,6 +50,25 @@ class ActivityIndicatorsSchema(BaseModel):
     cpi_message: str
     spi_status: SpiStatus
     spi_message: str
+
+    @classmethod
+    def from_domain(cls, indicators: ActivityIndicators) -> Self:
+        """Aplana el `ActivityIndicators` del service (con `cpi_interpretation`/
+        `spi_interpretation` anidados) al contrato plano del API."""
+        return cls(
+            pv=indicators.pv,
+            ev=indicators.ev,
+            cv=indicators.cv,
+            sv=indicators.sv,
+            cpi=indicators.cpi,
+            spi=indicators.spi,
+            eac=indicators.eac,
+            vac=indicators.vac,
+            cpi_status=indicators.cpi_interpretation.status,
+            cpi_message=indicators.cpi_interpretation.message,
+            spi_status=indicators.spi_interpretation.status,
+            spi_message=indicators.spi_interpretation.message,
+        )
 
 
 class ActivityWithIndicators(ActivityRead):
