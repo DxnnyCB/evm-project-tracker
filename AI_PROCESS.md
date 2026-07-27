@@ -104,3 +104,47 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 **Resultado:** Propuso 2 estructuras: A) por capas técnicas (routers/services/models/schemas/repositories) y B) por dominio (evm/, projects/, activities/). Elegí un híbrido: capas técnicas + `app/services/evm/` como subpaquete puro aislado. Se generó el esqueleto, `pyproject.toml` (deps + ruff + cobertura ≥80% sobre services) y un `main.py` mínimo con Swagger en `/docs` verificado.
 
 ---
+
+### 9. Definición de modelos: campos y relaciones
+
+> Bien, ahora toca definir los modelos. Decidamos los campos y la relaciones
+
+**Resultado:** Propuse la relación Project 1—N Activity y los campos de ambas tablas, dejando los indicadores EVM (PV, EV, CPI, etc.) fuera de la base de datos — se calculan al vuelo en el service, nunca persistidos. Dejé 5 decisiones abiertas para que el usuario definiera: tipo de PK (UUID vs Integer), persistencia o no de los indicadores, comportamiento de borrado (CASCADE vs RESTRICT), si mantener el campo `description` en Project, e idioma de los nombres de columna.
+
+---
+
+### 10. Decisiones de modelo: IDs, cascada e idioma de columnas
+
+> 1. Manejemos integers, siento que UUID para este proyecto no es relevante
+> 2. Solo al vuelo
+> 3. Tiene más sentido un CASCADE, ya que no hay un proyecto útil sin relación
+> 4. Quítalo, no es necesario, al menos para los requerimientos del proyecto
+> 5. Inglés, esa debe ser la regla
+>
+> Respecto al AI_PROCESS.md, registra y esta interacción también
+
+**Resultado:** Se cerró el diseño de los modelos: `id` Integer autoincremental como PK en ambas tablas, indicadores EVM calculados solo en el service (no persistidos), `ON DELETE CASCADE` de Activity hacia Project, sin campo `description` en Project, y nombres de columna en inglés (`bac`, `ac`, `planned_progress`, `actual_progress`).
+
+**Nota:** Cursor implementó 'CheckConstraints' para los rangos sin pedírselo, aún así, me parece una decisión técnica acorde, sobre todo con los casos 'borde' 
+
+---
+
+### 11. Inicializar Alembic y probar la primera migración
+
+> Lo hacemos ahora, en esta misma rama. Inicializa Alembic y genera la primera
+> migración a partir de estos modelos. Después de eso, corre la migración contra
+> una base de datos local para confirmar que el DDL generado es correcto (constraints
+> incluidos), antes de que cerremos esta feature.
+
+**Resultado:** Se inicializó Alembic (`alembic init`), configurando `env.py` para leer `Base.metadata` de los modelos y la URL de conexión desde `app.core.config.Settings` (sin credenciales en `alembic.ini`). Se generó la migración inicial con `--autogenerate` y se aplicó contra una base `evm_tracker` en el Postgres local. Verifiqué el DDL real en la base (no solo el archivo de migración): tablas, columnas, los 4 `CheckConstraint` y la `ForeignKey` con `ON DELETE CASCADE` quedaron exactamente como en los modelos. Además probé funcionalmente: inserción válida, rechazo de `bac` negativo por el `CheckConstraint`, borrado en cascada de actividades al borrar el proyecto, y un ciclo `downgrade`/`upgrade` completo sin errores.
+
+---
+
+### 12. Confirmación explícita del resultado de las 3 pruebas
+
+> Confirma el resultado final de las 3 pruebas: inserción válida, rechazo de CheckConstraint
+> con datos inválidos, y CASCADE al borrar el proyecto. Dame el resultado de cada una.
+
+**Resultado:** Volví a correr el script de verificación contra la base real (no repetí de memoria) y reporté el output textual de cada prueba: creación exitosa de proyecto+actividad, `IntegrityError` de Postgres citando explícitamente `ck_activities_bac_positive` al insertar `bac=-100`, y `0` actividades restantes tras borrar el proyecto (CASCADE). Al terminar, dejé la base limpia con `downgrade base` + `upgrade head`.
+
+---
