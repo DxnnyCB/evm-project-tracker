@@ -448,3 +448,57 @@ Tuve que agregar `extend-immutable-calls = ["fastapi.Depends"]` en `[tool.ruff.l
 44/44 tests en verde (38 unitarios de `evm/` + 6 de integración), ruff limpio.
 
 ---
+
+### 32. Códigos de estado del GET y arranque de los endpoints de escritura
+
+> Los veo bien, sí me gustaría saber qué códigos de estado responde y cómo se
+> maneja el 404 cuando el id no existe. Dame esa información y procede con los
+> endpoints de escritura
+
+**Resultado:** Ver explicación de códigos de estado del `GET /projects/{project_id}` en el mismo mensaje. Implementé los endpoints de escritura: `POST /projects`, `PATCH /projects/{project_id}`, `DELETE /projects/{project_id}`, `POST /projects/{project_id}/activities`, `PATCH /activities/{activity_id}`, `DELETE /activities/{activity_id}` — cada uno con su test de integración de contrato (código de estado + forma del body, incluyendo el 404 respectivo).
+
+---
+
+### 33. TDD de GET /projects (liviano) y GET /activities/{activity_id}
+
+> Sí, avancemos con esos dos endpoints.
+>
+> Para `GET /projects`, quiero que sea un endpoint liviano. Debe devolver
+> `ProjectRead`, sin indicadores. No quiero calcular métricas EVM de todos los
+> proyectos solo para construir el listado.
+>
+> Para `GET /activities/{activity_id}`, debe devolver
+> `ActivityWithIndicators`, siguiendo el mismo patrón de `from_domain` que ya
+> venimos usando. Si la actividad no existe, responde con `404`, igual que en el
+> resto de endpoints.
+>
+> Mantengamos el flujo de TDD que hemos seguido hasta ahora: primero escribe los
+> tests, confirma que fallan, y si durante la implementación aparece alguna
+> decisión no trivial o un cambio de arquitectura, muéstramelo antes de aplicarlo.
+
+**Resultado:** Escribí primero los 4 tests (2 por endpoint) y confirmé rojo (`405 Method Not Allowed`, las rutas no existían). Implementé `GET /projects` devolviendo `list[ProjectRead]` directo desde `project_repository.list_all`, sin tocar `activity_repository` ni el service EVM — cero cálculo de indicadores, como se pidió. Implementé `GET /activities/{activity_id}` con el mismo patrón de `from_domain` que `GET /projects/{project_id}`, con 404 solo en el router. De paso extraje `_get_activity_or_404` en `activities.py` (mismo patrón que `_get_project_or_404` ya existente en `projects.py`) para no duplicar el chequeo de 404 entre `get_activity`, `update_activity` y `delete_activity` — no lo consideré una decisión no trivial porque replica exactamente un patrón ya establecido y confirmado, no introduce uno nuevo.
+
+62/62 tests en verde (38 unitarios + 24 de integración), ruff limpio.
+
+---
+
+### 34. Revisión de cobertura antes de cerrar la rama + actualización de README
+
+> Antes de cerrar esta rama, tres cosas:
+> 1.Ya cubrimos con un test que POST /projects/{project_id}/activities con un
+>    project_id inexistente da 404, no un error de integridad de la FK? Si no,
+>    agrégalo.
+> 2. Muéstrame el test del "proyecto vacío" en test_projects_router.py , quiero
+>    confirmar que valida el consolidated completo (cpi_status INSUFFICIENT_DATA,
+>    valores en None), no solo el código 200.
+> 3. Actualiza el README: la sección "Estado del proyecto" con lo que ya está
+>    hecho, y cómo correr los tests de integración (la DB de test que armamos).
+
+**Resultado:**
+1. Ya estaba cubierto por `test_create_activity_returns_404_when_project_does_not_exist` — confirmé que el 404 ocurre porque el router llama a `_get_project_or_404` antes de `activity_repository.create`, así que el `INSERT` con FK inválida nunca se ejecuta (no hay que atrapar un `IntegrityError`, el chequeo pasa antes).
+2. El test original solo validaba `cpi`/`spi` en `None` y el 200. Lo completé con 12 aserciones: `total_bac/pv/ev/ac` en `0`, `cv`/`sv` en `0` (no `None`, porque `0-0=0`), `cpi/spi/eac/vac` en `None`, y `cpi_status`/`spi_status` en `"insufficient_data"` con sus mensajes presentes. 14/14 tests de `test_projects_router.py` en verde tras el cambio.
+3. Actualicé `README.md`: marqué como completados la capa de servicio EVM, `repositories/`, `schemas/`, el CRUD completo de endpoints y los 62 tests; agregué una subsección "Base de datos de los tests de integración" explicando la estrategia de Alembic + rollback por test sobre la misma DB de desarrollo.
+
+62/62 tests en verde, ruff limpio.
+
+---

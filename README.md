@@ -12,14 +12,15 @@ Actualizar esta lista en cada PR para que el README de `main` siempre refleje el
 - [x] Modelos SQLAlchemy (`Project`, `Activity`) con relación 1—N y `ON DELETE CASCADE`
 - [x] Constraints de validación en BD (`bac > 0`, `ac >= 0`, porcentajes 0–100)
 - [x] Alembic inicializado + migración inicial aplicada y verificada contra Postgres local
+- [x] Capa de servicio EVM (`calculator.py`, `interpreter.py`, `indicators.py`) — cálculo de los 8 indicadores por actividad y consolidado de proyecto, con interpretación machine-readable (status) + human-readable (mensaje) de CPI/SPI. 100% de cobertura.
+- [x] `repositories/` (acceso a datos puro) y `schemas/` (Pydantic, con validación espejando los `CheckConstraint` de la BD)
+- [x] Endpoints CRUD completos: `GET/POST /projects`, `GET/PATCH/DELETE /projects/{id}`, `POST /projects/{id}/activities`, `GET/PATCH/DELETE /activities/{id}`
+- [x] Tests unitarios (`services/evm`) e integración (endpoints, contra Postgres real con rollback por test) — 62 tests, cobertura ≥80% cumplida
 
 **Pendiente**
 
-- [ ] Capa de servicio EVM (cálculo de indicadores + interpretación)
-- [ ] Repositories, schemas Pydantic y endpoints CRUD
-- [ ] Tests unitarios (services) e integración (endpoints), cobertura ≥80%
 - [ ] Frontend Angular (dashboard, semáforo CPI/SPI, gráfica PV/EV/AC)
-- [ ] OpenAPI documentado por endpoint + video + cierre de `AI_PROCESS.md`
+- [ ] OpenAPI documentado por endpoint (descripciones/ejemplos más detallados en Swagger) + video + cierre de `AI_PROCESS.md`
 
 ## Stack
 
@@ -169,9 +170,19 @@ ruff format .
 
 ## Tests
 
-La configuración en `pyproject.toml` exige cobertura mínima del **80%** sobre `app.services`. Los tests unitarios e de integración se agregarán junto con la lógica EVM y los endpoints.
+La configuración en `pyproject.toml` exige cobertura mínima del **80%** sobre `app.services`. Hay dos tipos de test:
 
-Con el entorno virtual activo, desde `backend/` (mismo comando en cualquier sistema operativo):
+- **Unitarios** (`tests/unit/`): cubren `app/services/evm/` en aislamiento total, sin API ni base de datos.
+- **Integración** (`tests/integration/`): levantan la app con `TestClient` de FastAPI y ejercitan los endpoints reales contra una base de datos PostgreSQL.
+
+### Base de datos de los tests de integración
+
+Los tests de integración usan la **misma base de datos que configuraste para desarrollo** (la de tu `DATABASE_URL` en `.env`) — es un ejercicio técnico, no hay datos reales en juego, así que se prioriza simplicidad sobre tener una segunda base de datos separada. Dos cosas garantizan que esto sea seguro:
+
+1. **El esquema se crea con Alembic, no con `create_all()`.** Un fixture de sesión (`apply_migrations` en `tests/conftest.py`) corre `alembic upgrade head` antes de la suite. Si una migración está rota, los tests fallan de inmediato en vez de descubrirlo después.
+2. **Cada test corre dentro de su propia transacción y termina con `rollback()`, nunca `commit()`.** El fixture `db_session` abre una conexión + transacción externa; la app (routers → repositories) solo hace `flush()` internamente — el `commit()` real es responsabilidad exclusiva de `get_db()` en producción, y en los tests nunca se llega a ejecutar porque `db_session` se inyecta directo, sin pasar por esa dependencia. Al final del test, `rollback()` revierte todo. No quedan residuos mezclados con lo que pruebes manualmente en la misma base de datos.
+
+Con el entorno virtual activo y PostgreSQL corriendo (mismo `DATABASE_URL` que usas para desarrollo), desde `backend/` (mismo comando en cualquier sistema operativo):
 
 ```bash
 pytest
