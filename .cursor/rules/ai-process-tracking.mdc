@@ -1,0 +1,61 @@
+---
+description: Recordatorio y formato para mantener actualizado AI_PROCESS.md durante el desarrollo
+alwaysApply: true
+---
+
+# Registro del proceso con IA
+
+Este proyecto es parte de un desafío técnico donde `AI_PROCESS.md` es un entregable
+tan importante como el código. Debe reflejar el proceso real, en orden cronológico,
+a medida que ocurre — no reconstruido al final.
+
+## Recordatorio activo
+
+Antes de proponer un cambio significativo de código (nueva feature, servicio,
+endpoint, componente, o decisión de diseño), **pregunta primero si el prompt que
+dio origen a este cambio ya fue registrado en `AI_PROCESS.md`.** Si no lo fue,
+recuérdalo explícitamente antes de continuar con la implementación:
+
+> "Antes de seguir, ¿registro este prompt en AI_PROCESS.md?"
+
+No asumas que sí se registró. No lo registres tú mismo sin que se te pida
+explícitamente — el usuario debe confirmar el prompt textual exacto que se usará,
+porque el brief exige que los prompts se copien tal cual, no resumidos.
+
+## Formato para nuevas entradas de prompts (sección "Prompts")
+
+Cuando se te pida agregar una entrada, usa este formato exacto y agrégala al final
+de la sección `## Prompts (orden cronológico)`, respetando el orden cronológico real:
+
+```markdown
+### N. [Título breve de la tarea]
+
+> [prompt textual exacto, sin resumir ni parafrasear]
+
+**Resultado:** [1-2 líneas: qué generó y qué se hizo con eso — se usó tal cual,
+se modificó, o se descartó a favor de otra solución]
+
+---
+```
+
+No agregues una "Respuesta clave" extensa para prompts de construcción — esa
+sección solo aplica a los prompts de aprendizaje conceptual de EVM, que ya están
+documentados. Para el resto, prompt + resultado breve es suficiente.
+
+## Señales para sugerir una entrada en "Decisiones donde no seguí a la IA"
+
+Si en algún momento el usuario rechaza, corrige, o modifica sustancialmente una
+sugerencia de código o diseño que propusiste, señálalo:
+
+> "Esto podría ser una de las dos decisiones donde no seguiste la sugerencia de la
+> IA — ¿la registro en esa sección con lo que propuse vs. lo que decidiste?"
+
+No lo agregues automáticamente. Solo el usuario decide qué calidad de contraste
+merece estar ahí.
+
+## Qué NO hacer
+
+- No inventes o completes prompts que el usuario no escribió textualmente.
+- No resumas ni parafrasees el contenido de un prompt ya dado.
+- No marques una tarea como completada en el AI_PROCESS.md sin confirmación
+  explícita del usuario.
