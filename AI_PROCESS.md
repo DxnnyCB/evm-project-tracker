@@ -335,4 +335,84 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 
 Cierre del módulo `app/services/evm/`: **38/38 tests en verde, 100% de cobertura** en `calculator.py`, `enums.py`, `interpreter.py` e `indicators.py` — muy por encima del gate mínimo del 80% exigido en `pyproject.toml`. Todos los edge cases explícitos del brief (AC=0, avance real=0, sin actividades, consolidado sumando antes de derivar) quedaron cubiertos con pruebas.
 
+## 27. Decisiones donde no seguí la recomendación de la IA
+
+### Decisión 1: Schemas separados para indicadores
+
+**La IA sugirió:** reutilizar un solo `IndicatorsSchema` tanto para los
+indicadores de una actividad como para el consolidado del proyecto, realizando
+el mapeo de campos (`total_pv → pv`, `total_ev → ev`, etc.) en el router al
+construir la respuesta.
+
+**Decidí:** mantener dos schemas separados: `ActivityIndicatorsSchema` para los
+indicadores de una actividad y `ProjectConsolidatedIndicatorsSchema` para el
+consolidado del proyecto.
+
+**Motivo:** aunque ambos representan indicadores, conceptualmente no describen
+lo mismo. El consolidado de un proyecto no es equivalente a los indicadores de
+una actividad individual, por lo que prefiero que los nombres de los campos
+reflejen esa diferencia de forma explícita. Además, evitar el mapeo de nombres
+en el router elimina una transformación intermedia que puede convertirse en una
+fuente de errores. En este caso considero más valiosa una pequeña duplicación
+en los schemas que una abstracción que oculte esa diferencia.
+
+---
+
+### Decisión 2: Postgres para pruebas de integración
+
+**La IA sugirió:** utilizar SQLite en memoria para las pruebas de integración
+por su rapidez y porque no requiere dependencias externas.
+
+**Decidí:** ejecutar las pruebas de integración sobre una base de datos
+PostgreSQL dedicada.
+
+**Motivo:** la aplicación depende de comportamientos específicos de PostgreSQL,
+como los `CHECK CONSTRAINT` y `ON DELETE CASCADE`. SQLite implementa varias
+características de forma diferente (por ejemplo, el manejo de claves foráneas o
+el comportamiento de algunos tipos de datos), por lo que una prueba exitosa en
+SQLite no garantiza el mismo resultado en producción. Prefiero asumir un costo
+ligeramente mayor en el tiempo de ejecución de las pruebas a cambio de validar
+el comportamiento sobre el mismo motor de base de datos que utilizará la
+aplicación.
+
+---
+
+### 28. Confirmación de schemas finales y avance a repositories/
+
+> Confirmado con el punto 1: mantén la validación duplicada (Field en el schema +
+> CheckConstraint en la DB). El schema da un 422 legible antes de tocar la base de
+> datos; el constraint sigue siendo la última línea de defensa si algo escribe
+> directo a Postgres. No es redundancia inútil, son dos propósitos distintos.
+>
+> Punto 2 confirmado: sin created_at/updated_at en el contrato de la API, no aportan
+> al caso de uso del dashboard.
+>
+> Punto 3 confirmado, sin cambios.
+>
+> Procede con repositories/.
+
+**Resultado:** Quedaron confirmados los schemas finales de `app/schemas/activity.py` (`ActivityCreate`, `ActivityUpdate`, `ActivityRead`, `ActivityIndicatorsSchema`, `ActivityWithIndicators`) y `app/schemas/project.py` (`ProjectCreate`, `ProjectUpdate`, `ProjectRead`, `ProjectConsolidatedIndicatorsSchema`, `ProjectDetail`), incorporando las decisiones 1 y 2 de la sección anterior (schemas separados, sin created_at/updated_at) más validación con `Field` (`gt`/`ge`/`le`) espejando los `CheckConstraint` de `Activity`, y `ConfigDict(from_attributes=True)` solo en los schemas que se construyen directo desde modelos SQLAlchemy. Con esto confirmado, se pasa a implementar `app/repositories/` (acceso a datos puro, sin lógica de negocio).
+
+---
+
+### 29. Estrategia de tests de integración: Alembic + rollback por test + misma DB de dev
+
+> Quiero ambas cosas, no son alternativas, se complementan.
+>
+> Para crear el esquema de la base de datos de pruebas, usa las migraciones de Alembic (`alembic upgrade head`), no `create_all()`. Así, si en algún momento rompo una migración, los tests me lo van a mostrar de inmediato en lugar de enterarme después.
+>
+> Para aislar los tests, haz que cada uno se ejecute dentro de su propia transacción y al finalizar haga rollback (nunca commit). Prefiero eso antes que estar truncando tablas entre prueba y prueba.
+>
+> Voy a usar la misma base de datos para desarrollo y tests, es un ejercicio técnico, no hay datos reales en juego, prefiero simplicidad. Solo asegúrate de que el rollback por test funcione bien, para no dejar residuos de prueba mezclados con lo que estoy probando manualmente.
+
+**Resultado:** Antes de implementar, señalé un problema real: los `repositories/` ya hacían `db.commit()` internamente, lo que rompería el rollback por test (el commit del repository confirma la transacción antes de que el test pueda revertirla). Presenté dos opciones — (a) mover el commit fuera de los repositories hacia `get_db()`, dejando que estos solo hagan `flush()`, o (b) mantener el commit en los repositories y usar SAVEPOINTs anidados en el conftest. Elegiste (a).
+
+Implementé:
+- `app/core/database.py`: `get_db()` ahora hace `commit()` al final de la request si no hubo excepción, o `rollback()` si la hubo — unidad de trabajo por request.
+- `app/repositories/*`: se quitó todo `db.commit()`/`db.refresh()`, reemplazado por `db.flush()` (deja el `id` autogenerado disponible y valida constraints de inmediato, sin cerrar la transacción).
+- `tests/conftest.py`: fixture `apply_migrations` (session-scoped, autouse) que corre `alembic upgrade head` contra la misma `DATABASE_URL` de desarrollo; fixture `db_session` que abre una conexión + transacción externa y hace `rollback()` al final (sin SAVEPOINTs, ya no hacen falta porque los repositories no comitean); fixture `client` que sobreescribe `get_db` para inyectar esa sesión de test en la app de FastAPI.
+- `tests/integration/test_infrastructure.py`: 3 pruebas que validan la infraestructura en sí misma — `/health` responde vía `TestClient`, un proyecto creado es visible dentro del mismo test, y ese mismo proyecto no aparece en el test siguiente (confirma que el rollback no deja residuos).
+
+41/41 tests en verde (38 unitarios de `evm/` + 3 de infraestructura), ruff limpio.
+
 ---
