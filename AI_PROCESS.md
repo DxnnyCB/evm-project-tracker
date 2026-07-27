@@ -335,4 +335,170 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 
 Cierre del módulo `app/services/evm/`: **38/38 tests en verde, 100% de cobertura** en `calculator.py`, `enums.py`, `interpreter.py` e `indicators.py` — muy por encima del gate mínimo del 80% exigido en `pyproject.toml`. Todos los edge cases explícitos del brief (AC=0, avance real=0, sin actividades, consolidado sumando antes de derivar) quedaron cubiertos con pruebas.
 
+## 27. Decisiones donde no seguí la recomendación de la IA
+
+### Decisión 1: Schemas separados para indicadores
+
+**La IA sugirió:** reutilizar un solo `IndicatorsSchema` tanto para los
+indicadores de una actividad como para el consolidado del proyecto, realizando
+el mapeo de campos (`total_pv → pv`, `total_ev → ev`, etc.) en el router al
+construir la respuesta.
+
+**Decidí:** mantener dos schemas separados: `ActivityIndicatorsSchema` para los
+indicadores de una actividad y `ProjectConsolidatedIndicatorsSchema` para el
+consolidado del proyecto.
+
+**Motivo:** aunque ambos representan indicadores, conceptualmente no describen
+lo mismo. El consolidado de un proyecto no es equivalente a los indicadores de
+una actividad individual, por lo que prefiero que los nombres de los campos
+reflejen esa diferencia de forma explícita. Además, evitar el mapeo de nombres
+en el router elimina una transformación intermedia que puede convertirse en una
+fuente de errores. En este caso considero más valiosa una pequeña duplicación
+en los schemas que una abstracción que oculte esa diferencia.
+
+---
+
+### Decisión 2: Postgres para pruebas de integración
+
+**La IA sugirió:** utilizar SQLite en memoria para las pruebas de integración
+por su rapidez y porque no requiere dependencias externas.
+
+**Decidí:** ejecutar las pruebas de integración sobre una base de datos
+PostgreSQL dedicada.
+
+**Motivo:** la aplicación depende de comportamientos específicos de PostgreSQL,
+como los `CHECK CONSTRAINT` y `ON DELETE CASCADE`. SQLite implementa varias
+características de forma diferente (por ejemplo, el manejo de claves foráneas o
+el comportamiento de algunos tipos de datos), por lo que una prueba exitosa en
+SQLite no garantiza el mismo resultado en producción. Prefiero asumir un costo
+ligeramente mayor en el tiempo de ejecución de las pruebas a cambio de validar
+el comportamiento sobre el mismo motor de base de datos que utilizará la
+aplicación.
+
+---
+
+### 28. Confirmación de schemas finales y avance a repositories/
+
+> Confirmado con el punto 1: mantén la validación duplicada (Field en el schema +
+> CheckConstraint en la DB). El schema da un 422 legible antes de tocar la base de
+> datos; el constraint sigue siendo la última línea de defensa si algo escribe
+> directo a Postgres. No es redundancia inútil, son dos propósitos distintos.
+>
+> Punto 2 confirmado: sin created_at/updated_at en el contrato de la API, no aportan
+> al caso de uso del dashboard.
+>
+> Punto 3 confirmado, sin cambios.
+>
+> Procede con repositories/.
+
+**Resultado:** Quedaron confirmados los schemas finales de `app/schemas/activity.py` (`ActivityCreate`, `ActivityUpdate`, `ActivityRead`, `ActivityIndicatorsSchema`, `ActivityWithIndicators`) y `app/schemas/project.py` (`ProjectCreate`, `ProjectUpdate`, `ProjectRead`, `ProjectConsolidatedIndicatorsSchema`, `ProjectDetail`), incorporando las decisiones 1 y 2 de la sección anterior (schemas separados, sin created_at/updated_at) más validación con `Field` (`gt`/`ge`/`le`) espejando los `CheckConstraint` de `Activity`, y `ConfigDict(from_attributes=True)` solo en los schemas que se construyen directo desde modelos SQLAlchemy. Con esto confirmado, se pasa a implementar `app/repositories/` (acceso a datos puro, sin lógica de negocio).
+
+---
+
+### 29. Estrategia de tests de integración: Alembic + rollback por test + misma DB de dev
+
+> Quiero ambas cosas, no son alternativas, se complementan.
+>
+> Para crear el esquema de la base de datos de pruebas, usa las migraciones de Alembic (`alembic upgrade head`), no `create_all()`. Así, si en algún momento rompo una migración, los tests me lo van a mostrar de inmediato en lugar de enterarme después.
+>
+> Para aislar los tests, haz que cada uno se ejecute dentro de su propia transacción y al finalizar haga rollback (nunca commit). Prefiero eso antes que estar truncando tablas entre prueba y prueba.
+>
+> Voy a usar la misma base de datos para desarrollo y tests, es un ejercicio técnico, no hay datos reales en juego, prefiero simplicidad. Solo asegúrate de que el rollback por test funcione bien, para no dejar residuos de prueba mezclados con lo que estoy probando manualmente.
+
+**Resultado:** Antes de implementar, señalé un problema real: los `repositories/` ya hacían `db.commit()` internamente, lo que rompería el rollback por test (el commit del repository confirma la transacción antes de que el test pueda revertirla). Presenté dos opciones — (a) mover el commit fuera de los repositories hacia `get_db()`, dejando que estos solo hagan `flush()`, o (b) mantener el commit en los repositories y usar SAVEPOINTs anidados en el conftest. Elegiste (a).
+
+Implementé:
+- `app/core/database.py`: `get_db()` ahora hace `commit()` al final de la request si no hubo excepción, o `rollback()` si la hubo — unidad de trabajo por request.
+- `app/repositories/*`: se quitó todo `db.commit()`/`db.refresh()`, reemplazado por `db.flush()` (deja el `id` autogenerado disponible y valida constraints de inmediato, sin cerrar la transacción).
+- `tests/conftest.py`: fixture `apply_migrations` (session-scoped, autouse) que corre `alembic upgrade head` contra la misma `DATABASE_URL` de desarrollo; fixture `db_session` que abre una conexión + transacción externa y hace `rollback()` al final (sin SAVEPOINTs, ya no hacen falta porque los repositories no comitean); fixture `client` que sobreescribe `get_db` para inyectar esa sesión de test en la app de FastAPI.
+- `tests/integration/test_infrastructure.py`: 3 pruebas que validan la infraestructura en sí misma — `/health` responde vía `TestClient`, un proyecto creado es visible dentro del mismo test, y ese mismo proyecto no aparece en el test siguiente (confirma que el rollback no deja residuos).
+
+41/41 tests en verde (38 unitarios de `evm/` + 3 de infraestructura), ruff limpio.
+
+---
+
+### 30. Diseño del flujo de GET /projects/{project_id} antes de escribir código
+
+> Sigamos con los `routers/`.
+>
+> Antes de implementar el primero, quiero confirmar que el 404 cuando
+> get_by_id devuelve None se maneje únicamente en el router
+>
+> Empecemos por GET /projects/{project_id}, ya que es el endpoint que integra
+> más componentes (proyecto, actividades con indicadores y consolidado).
+>
+> Antes de generar el código, muéstrame el flujo completo de la petición, desde
+> que entra al router hasta la respuesta final, para validar que la separación de
+> responsabilidades sea la que buscamos.
+
+**Resultado:** Propuse el flujo completo: `router` → `project_repository.get_by_id` (404 solo aquí, si es `None`) → `activity_repository.list_by_project` → por cada `Activity`, `indicators.calculate_activity_indicators` (service) + `ActivityIndicatorsSchema.from_domain` (mapeo a schema) → `ActivityWithIndicators` → en paralelo, lista de `ActivityInput` crudos (independiente de los indicadores ya calculados) → `indicators.calculate_project_consolidated` → `ProjectConsolidatedIndicatorsSchema.from_domain` → `ProjectDetail`. Propuse que la traducción de los `NamedTuple` del service (`ActivityIndicators`/`ProjectConsolidatedIndicators`, con `cpi_interpretation`/`spi_interpretation` anidados) a los schemas planos de la API viva como `classmethod from_domain(...)` en cada schema — ni el service conoce Pydantic, ni el router tiene mapeo campo-por-campo disperso inline.
+
+**Nota:** Este prompt fue refinado con ayuda de Claude Code
+
+---
+
+### 31. Confirmación del flujo y arranque de la implementación
+
+> Confirmado el flujo, me parece bien.
+
+**Resultado:** Implementé `ActivityIndicatorsSchema.from_domain` y `ProjectConsolidatedIndicatorsSchema.from_domain` según lo propuesto, y `app/routers/projects.py` con `GET /projects/{project_id}` siguiendo exactamente el flujo confirmado en la entrada 30 (404 solo en el router, service sin cambios, mapeo vía `from_domain`). Agregué el router a `main.py` y 3 tests de integración que validan el contrato completo de la respuesta (proyecto + actividades con sus 8 indicadores + consolidado, proyecto sin actividades, 404 de proyecto inexistente) usando datos reales insertados en Postgres a través de los repositories dentro de la misma transacción de test.
+
+Tuve que agregar `extend-immutable-calls = ["fastapi.Depends"]` en `[tool.ruff.lint.flake8-bugbear]`: ruff marcaba `Depends(get_db)` como B008 ("no llames funciones en defaults de argumentos"), pero ese es exactamente el patrón de inyección de dependencias de FastAPI, no el problema de mutable-default que la regla busca prevenir.
+
+44/44 tests en verde (38 unitarios de `evm/` + 6 de integración), ruff limpio.
+
+---
+
+### 32. Códigos de estado del GET y arranque de los endpoints de escritura
+
+> Los veo bien, sí me gustaría saber qué códigos de estado responde y cómo se
+> maneja el 404 cuando el id no existe. Dame esa información y procede con los
+> endpoints de escritura
+
+**Resultado:** Ver explicación de códigos de estado del `GET /projects/{project_id}` en el mismo mensaje. Implementé los endpoints de escritura: `POST /projects`, `PATCH /projects/{project_id}`, `DELETE /projects/{project_id}`, `POST /projects/{project_id}/activities`, `PATCH /activities/{activity_id}`, `DELETE /activities/{activity_id}` — cada uno con su test de integración de contrato (código de estado + forma del body, incluyendo el 404 respectivo).
+
+---
+
+### 33. TDD de GET /projects (liviano) y GET /activities/{activity_id}
+
+> Sí, avancemos con esos dos endpoints.
+>
+> Para `GET /projects`, quiero que sea un endpoint liviano. Debe devolver
+> `ProjectRead`, sin indicadores. No quiero calcular métricas EVM de todos los
+> proyectos solo para construir el listado.
+>
+> Para `GET /activities/{activity_id}`, debe devolver
+> `ActivityWithIndicators`, siguiendo el mismo patrón de `from_domain` que ya
+> venimos usando. Si la actividad no existe, responde con `404`, igual que en el
+> resto de endpoints.
+>
+> Mantengamos el flujo de TDD que hemos seguido hasta ahora: primero escribe los
+> tests, confirma que fallan, y si durante la implementación aparece alguna
+> decisión no trivial o un cambio de arquitectura, muéstramelo antes de aplicarlo.
+
+**Resultado:** Escribí primero los 4 tests (2 por endpoint) y confirmé rojo (`405 Method Not Allowed`, las rutas no existían). Implementé `GET /projects` devolviendo `list[ProjectRead]` directo desde `project_repository.list_all`, sin tocar `activity_repository` ni el service EVM — cero cálculo de indicadores, como se pidió. Implementé `GET /activities/{activity_id}` con el mismo patrón de `from_domain` que `GET /projects/{project_id}`, con 404 solo en el router. De paso extraje `_get_activity_or_404` en `activities.py` (mismo patrón que `_get_project_or_404` ya existente en `projects.py`) para no duplicar el chequeo de 404 entre `get_activity`, `update_activity` y `delete_activity` — no lo consideré una decisión no trivial porque replica exactamente un patrón ya establecido y confirmado, no introduce uno nuevo.
+
+62/62 tests en verde (38 unitarios + 24 de integración), ruff limpio.
+
+---
+
+### 34. Revisión de cobertura antes de cerrar la rama + actualización de README
+
+> Antes de cerrar esta rama, tres cosas:
+> 1.Ya cubrimos con un test que POST /projects/{project_id}/activities con un
+>    project_id inexistente da 404, no un error de integridad de la FK? Si no,
+>    agrégalo.
+> 2. Muéstrame el test del "proyecto vacío" en test_projects_router.py , quiero
+>    confirmar que valida el consolidated completo (cpi_status INSUFFICIENT_DATA,
+>    valores en None), no solo el código 200.
+> 3. Actualiza el README: la sección "Estado del proyecto" con lo que ya está
+>    hecho, y cómo correr los tests de integración (la DB de test que armamos).
+
+**Resultado:**
+1. Ya estaba cubierto por `test_create_activity_returns_404_when_project_does_not_exist` — confirmé que el 404 ocurre porque el router llama a `_get_project_or_404` antes de `activity_repository.create`, así que el `INSERT` con FK inválida nunca se ejecuta (no hay que atrapar un `IntegrityError`, el chequeo pasa antes).
+2. El test original solo validaba `cpi`/`spi` en `None` y el 200. Lo completé con 12 aserciones: `total_bac/pv/ev/ac` en `0`, `cv`/`sv` en `0` (no `None`, porque `0-0=0`), `cpi/spi/eac/vac` en `None`, y `cpi_status`/`spi_status` en `"insufficient_data"` con sus mensajes presentes. 14/14 tests de `test_projects_router.py` en verde tras el cambio.
+3. Actualicé `README.md`: marqué como completados la capa de servicio EVM, `repositories/`, `schemas/`, el CRUD completo de endpoints y los 62 tests; agregué una subsección "Base de datos de los tests de integración" explicando la estrategia de Alembic + rollback por test sobre la misma DB de desarrollo.
+
+62/62 tests en verde, ruff limpio.
+
 ---

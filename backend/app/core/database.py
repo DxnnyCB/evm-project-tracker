@@ -26,9 +26,20 @@ class Base(DeclarativeBase):
 
 
 def get_db() -> Generator[Session, None, None]:
-    """Dependencia de FastAPI: entrega una sesión de DB y garantiza su cierre."""
+    """Dependencia de FastAPI: entrega una sesión de DB por request.
+
+    Hace commit al final si la request no lanzó ninguna excepción, o rollback
+    si la lanzó. Los repositories nunca hacen commit por sí mismos (solo
+    flush) — el commit es responsabilidad exclusiva de esta unidad de trabajo
+    por request, para que los tests de integración puedan envolver toda la
+    request en una transacción externa y revertirla sin residuos.
+    """
     db = SessionLocal()
     try:
         yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()

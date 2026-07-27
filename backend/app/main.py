@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.routers.projects import router as projects_router
+
 app = FastAPI(
     title="EVM Project Tracker API",
     description=(
@@ -8,6 +10,8 @@ app = FastAPI(
     ),
     version="0.1.0",
 )
+
+app.include_router(projects_router)
 
 
 @app.get("/health", tags=["health"])
