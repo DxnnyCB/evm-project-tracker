@@ -502,3 +502,41 @@ Tuve que agregar `extend-immutable-calls = ["fastapi.Depends"]` en `[tool.ruff.l
 62/62 tests en verde, ruff limpio.
 
 ---
+
+### 35. Documentar 404 en Swagger y agregar ejemplos realistas de Decimal
+
+> Dos ajustes en Swagger antes de pasar al frontend:
+>
+> 1. Los endpoints que pueden devolver 404 no lo tienen documentado en Swagger
+>    (aparece como "Undocumented" en la UI). Agrega responses={404: {"description":
+>    "..."}} en cada uno de: GET/PATCH/DELETE /projects/{project_id},
+>    POST /projects/{project_id}/activities, GET/PATCH/DELETE /activities/{activity_id}.
+>
+> 2. Los ejemplos de Decimal en Swagger muestran números absurdamente largos
+>    (comportamiento por defecto de Pydantic/OpenAPI para Decimal sin ejemplo
+>    explícito). Agrega json_schema_extra con un ejemplo realista en
+>    ActivityIndicatorsSchema y ProjectConsolidatedIndicatorsSchema — usa los
+>    valores del ejercicio BAC=8.000.000 que ya validamos a mano.
+
+**Resultado:** Agregué `responses={404: {"description": "..."}}` en los 7 endpoints señalados, usando constantes compartidas (`PROJECT_NOT_FOUND_RESPONSE` en `projects.py`, `ACTIVITY_NOT_FOUND_RESPONSE` en `activities.py`) para no repetir el literal. Agregué `model_config = ConfigDict(json_schema_extra={"example": {...}})` en `ActivityIndicatorsSchema` (valores de `test_calculate_activity_indicators_returns_all_eight_metrics_with_interpretation`: BAC=8.000.000, planificado 60%, real 70%, AC=6.000.000 → CPI≈0.9333, SPI≈1.1667) y en `ProjectConsolidatedIndicatorsSchema` (valores de `test_calculate_project_consolidated_sums_pv_ev_ac_before_deriving_indices`, que también suma total_bac=8.000.000 entre 3 actividades → CPI≈0.9216, SPI=1). Verifiqué contra el `openapi.json` real levantando el servidor que ambos ejemplos aparecen correctamente y que los 7 endpoints ya no figuran como "Undocumented" para el 404.
+
+62/62 tests en verde, ruff limpio.
+
+**Adenda — bug encontrado probando manualmente:**
+
+> Encontré un problema probando manualmente: cpi y otros índices llegan con hasta
+> 28 decimales en la respuesta JSON (ej. "0.8333333333333333333333333333"),
+> porque Decimal no redondea automáticamente en la división.
+>
+> Quiero redondear a 2 decimales, pero solo en la capa de presentación
+> (from_domain de los schemas), no en calculator.py — ahí prefiero mantener
+> la precisión completa para no acumular error en cálculos intermedios
+> como EAC = BAC/CPI.
+
+**Resultado:** Creé `app/schemas/rounding.py` con `round_for_presentation`/`round_for_presentation_optional` (quantize a `0.01`, `ROUND_HALF_UP`) y los apliqué únicamente dentro de `ActivityIndicatorsSchema.from_domain` y `ProjectConsolidatedIndicatorsSchema.from_domain`. `calculator.py` queda intacto — sigue devolviendo `Decimal` de precisión completa (28 dígitos), y `EAC = BAC/CPI` se sigue derivando del `CPI` sin redondear, solo el número final que se serializa al JSON se redondea. Agregué `tests/unit/test_schemas_rounding.py` con casos que reproducen el bug (división no exacta) y confirman 2 decimales en la respuesta, más el caso `None` (no debe romperse al redondear un índice indeterminado).
+
+Al correr la suite completa después del fix, aparecieron 2 fallos no relacionados: `test_list_projects_returns_all_projects_without_indicators` y `test_list_projects_returns_empty_list_when_there_are_no_projects` fallaban porque la base de datos de desarrollo compartida ya tenía un proyecto real (`"PROYECTO ACTUALIZADO"`, creado por las pruebas manuales del usuario), y `GET /projects` lista todos los proyectos sin filtrar. No es un bug de la app — es consecuencia directa de compartir la DB de dev y test. Respetando la decisión explícita de no truncar tablas como estrategia general de aislamiento, agregué `_delete_all_projects(db_session)` como ajuste puntual **solo** en esos dos tests: borra la tabla dentro de la misma transacción del test, y el `rollback()` de siempre restaura los datos reales al terminar. Confirmé manualmente que `"PROYECTO ACTUALIZADO"` seguía intacto después de correr toda la suite.
+
+66/66 tests en verde, ruff limpio.
+
+---

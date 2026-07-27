@@ -3,6 +3,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.rounding import round_for_presentation, round_for_presentation_optional
 from app.services.evm.enums import CpiStatus, SpiStatus
 from app.services.evm.indicators import ActivityIndicators
 
@@ -38,6 +39,30 @@ class ActivityRead(BaseModel):
 
 
 class ActivityIndicatorsSchema(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "pv": "4800000.00",
+                "ev": "5600000.00",
+                "cv": "-400000.00",
+                "sv": "800000.00",
+                "cpi": "0.9333",
+                "spi": "1.1667",
+                "eac": "8571428.57",
+                "vac": "-571428.57",
+                "cpi_status": "over_budget",
+                "cpi_message": (
+                    "Sobre presupuesto: el proyecto está gastando más de lo "
+                    "planificado para el avance logrado."
+                ),
+                "spi_status": "ahead_of_schedule",
+                "spi_message": (
+                    "Adelantado: el avance real supera al avance planificado para esta fecha."
+                ),
+            }
+        }
+    )
+
     pv: Decimal
     ev: Decimal
     cv: Decimal
@@ -56,14 +81,14 @@ class ActivityIndicatorsSchema(BaseModel):
         """Aplana el `ActivityIndicators` del service (con `cpi_interpretation`/
         `spi_interpretation` anidados) al contrato plano del API."""
         return cls(
-            pv=indicators.pv,
-            ev=indicators.ev,
-            cv=indicators.cv,
-            sv=indicators.sv,
-            cpi=indicators.cpi,
-            spi=indicators.spi,
-            eac=indicators.eac,
-            vac=indicators.vac,
+            pv=round_for_presentation(indicators.pv),
+            ev=round_for_presentation(indicators.ev),
+            cv=round_for_presentation(indicators.cv),
+            sv=round_for_presentation(indicators.sv),
+            cpi=round_for_presentation_optional(indicators.cpi),
+            spi=round_for_presentation_optional(indicators.spi),
+            eac=round_for_presentation_optional(indicators.eac),
+            vac=round_for_presentation_optional(indicators.vac),
             cpi_status=indicators.cpi_interpretation.status,
             cpi_message=indicators.cpi_interpretation.message,
             spi_status=indicators.spi_interpretation.status,

@@ -1,9 +1,25 @@
 from decimal import Decimal
 
+from app.models.project import Project
 from app.repositories import activity_repository, project_repository
 from app.schemas.activity import ActivityCreate
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
+
+
+def _delete_all_projects(db_session: Session) -> None:
+    """Limpia la tabla `projects` (y en cascada `activities`, por ON DELETE
+    CASCADE a nivel de DB) dentro de la transacción del test.
+
+    Solo se usa en los tests que hacen aserciones sobre el estado *total* de
+    la tabla (lista vacía / lista exacta). Como `db_session` nunca hace
+    commit, el rollback al final del test restaura cualquier dato real que
+    hubiera en la base de datos compartida con desarrollo — no es la
+    estrategia general de aislamiento, es un ajuste puntual para estos casos.
+    """
+    db_session.execute(delete(Project))
+    db_session.flush()
 
 
 def _create_activity(db_session: Session, project_id: int) -> None:
@@ -23,6 +39,7 @@ def _create_activity(db_session: Session, project_id: int) -> None:
 def test_list_projects_returns_all_projects_without_indicators(
     client: TestClient, db_session: Session
 ) -> None:
+    _delete_all_projects(db_session)
     first = project_repository.create(db_session, "Highway construction")
     second = project_repository.create(db_session, "Bridge repair")
 
@@ -37,8 +54,10 @@ def test_list_projects_returns_all_projects_without_indicators(
 
 
 def test_list_projects_returns_empty_list_when_there_are_no_projects(
-    client: TestClient,
+    client: TestClient, db_session: Session
 ) -> None:
+    _delete_all_projects(db_session)
+
     response = client.get("/projects")
 
     assert response.status_code == 200
