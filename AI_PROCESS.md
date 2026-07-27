@@ -210,3 +210,129 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 **Resultado:** Propuse un módulo dedicado `app/services/evm/enums.py` para `CpiStatus`/`SpiStatus`, separado de `interpreter.py`, anticipando que `app/schemas/` y `app/services/evm/indicators.py` también necesitarán importarlos sin arrastrar la lógica de `interpreter.py`. Los `NamedTuple` (`CpiInterpretation`, `SpiInterpretation`) se quedan en `interpreter.py` por ser la forma de retorno específica de esas funciones, no vocabulario compartido.
 
 ---
+
+### 17. Continuar TDD: calculate_cv
+
+> Sigamos con calculate_cv
+
+**Resultado:** Ciclo rojo→verde de `calculate_cv` (CV = EV − AC), 3 tests (positivo, negativo, cero). 7/7 tests en verde, ruff limpio.
+
+---
+
+### 18. Continuar TDD: calculate_sv
+
+> Continua
+
+**Resultado:** Ciclo rojo→verde de `calculate_sv` (SV = EV − PV), 3 tests análogos a CV. 10/10 tests en verde. Tuve que acortar una docstring que excedía el límite de 100 caracteres de ruff.
+
+---
+
+### 19. TDD de calculate_cpi con pausa para revisar el manejo de None
+
+> Sí, continúa con los 3 tests de calculate_cpi y confirma que están en rojo.
+> Pero antes de correr la implementación como verde definitivo, muéstrame el código
+> propuesto de calculate_cpi — quiero revisar cómo maneja los dos casos de None
+> (0/0 y positivo/0) antes de confirmarlo.
+
+**Resultado:** Escribí los 3 tests (caso típico, None por 0/0, None por positivo/0) y confirmé rojo. Antes de implementar, mostré el código propuesto: una sola condición `if ac == 0: return None` cubre ambos casos de indeterminación, dejando la distinción semántica para `interpreter.py` (según lo acordado en la entrada 14). Quedó pendiente de confirmación del usuario antes de aplicar.
+
+---
+
+### 20. Confirmación de calculate_cpi
+
+> Confirmado, aplícalos y córrelos
+
+**Resultado:** Apliqué la implementación de `calculate_cpi` ya mostrada. 13/13 tests en verde, ruff limpio.
+
+---
+
+### 21. TDD de calculate_spi (mismo patrón) y arranque de calculate_eac con pausa
+
+> Continúa con los 3 de una vez, mismo patrón que calculate_cpi. Cuando termines,
+> sigue con calculate_eac — ahí sí pausa antes de aplicar la implementación,
+> porque tiene dos condiciones de None distintas (cpi is None y cpi == 0), no
+> una sola como calculate_cpi/calculate_spi.
+
+**Resultado:** Apliqué `calculate_spi` directo (mismo patrón ya validado en CPI) — 16/16 tests en verde. Para `calculate_eac` escribí los 3 tests, confirmé rojo, y mostré el código propuesto sin aplicarlo: `if cpi is None or cpi == 0: return None`, explicando por qué son dos condiciones distintas (indeterminación heredada vs. división por cero con CPI=0 válido). Quedó pendiente de confirmación.
+
+---
+
+### 22. Confirmación de calculate_eac y arranque de calculate_vac
+
+> Confirmado, aplícalo y corre los tests. Sigue con calculate_vac (BAC − EAC,
+> con None si EAC es None) — es más simple, una sola condición de propagación,
+> no necesito pausa ahí.
+
+**Resultado:** Apliqué `calculate_eac` y `calculate_vac` (sin pausa en este último, por instrucción explícita). 21/21 tests en verde, 100% de cobertura en `calculator.py`. Cierra el archivo completo (PV, EV, CV, SV, CPI, SPI, EAC, VAC).
+
+---
+
+### 23. enums.py + TDD de interpret_cpi con pausa para revisar el status
+
+> Continúa así: primero enums.py, luego el ciclo TDD de interpret_cpi empezando
+> por under_budget. Cuando tengas los 5 tests de interpret_cpi escritos y en rojo,
+> muéstrame la implementación propuesta antes de aplicarla — quiero verificar que
+> el status de INSUFFICIENT_DATA y COST_NOT_RECORDED se asignen correctamente
+> según ev y ac, no solo que el mensaje suene bien.
+
+**Resultado:** Creé `enums.py` (`CpiStatus`, `SpiStatus`, sin lógica). Escribí los 5 tests de `interpret_cpi` y confirmé rojo. Mostré el código propuesto antes de aplicarlo, explicando explícitamente la condición `ac == 0 and ev == 0` para `INSUFFICIENT_DATA` vs. el resto de casos `None` para `COST_NOT_RECORDED`, y por qué chequeo `ac == 0` de forma explícita en vez de depender silenciosamente del invariante de `calculate_cpi`. Quedó pendiente de confirmación.
+
+---
+
+### 24. Confirmación de interpret_cpi y arranque de interpret_spi
+
+> Confirmado, aplícalo y corre los 5 tests. Sigue con interpret_spi (mismo patrón,
+> sobre pv en vez de ac) — no necesito pausa ahí, ya validamos el patrón completo
+> en interpret_cpi.
+
+**Resultado:** Apliqué `interpret_cpi` (5/5 tests verdes) y luego `interpret_spi` sin pausa, mismo patrón sobre `pv`/`ev`. 10/10 tests en verde, 100% de cobertura en `interpreter.py` y `enums.py`. Tuve que cambiar `str, Enum` por `enum.StrEnum` (sugerencia de ruff `UP042`, misma serialización para Pydantic/FastAPI) y acortar una línea larga.
+
+---
+
+### 25. Diseño de indicators.py antes de escribir tests
+
+> Antes de empezar indicators.py, necesito ver el diseño primero — no escribas
+> tests todavía.
+>
+> 1. Muéstrame la firma que propones para la función que calcula los indicadores
+>    de UNA actividad (probablemente algo como calculate_activity_indicators(bac,
+>    planned_progress, actual_progress, ac)). ¿Qué devuelve exactamente? ¿Un
+>    NamedTuple con las 8 métricas más las interpretaciones de CPI y SPI?
+>
+> 2. Muéstrame la firma que propones para el consolidado de PROYECTO. Esto es lo
+>    más importante: la función debe sumar PV, EV y AC de todas las actividades
+>    PRIMERO, y solo después derivar CPI/SPI/etc. sobre esos totales — nunca
+>    promediar los índices individuales de cada actividad. ¿Cómo se ve esa firma?
+>    ¿Recibe la lista de actividades crudas (bac/planned/actual/ac de cada una) y
+>    suma ella misma, o recibe los ActivityIndicators ya calculados y re-suma los
+>    valores base desde ahí?
+>
+> 3. Para el caso de "mixed AC zero" (algunas actividades con AC=0 y CPI individual
+>    en None, pero el total de AC del proyecto es mayor a cero): confírmame que el
+>    consolidado nunca usa los CPI individuales como insumo — siempre recalcula
+>    desde las sumas totales de PV/EV/AC.
+>
+> Dame la firma y un pseudocódigo corto de ambas funciones. Cuando lo confirme,
+> empezamos el ciclo TDD como con calculator.py e interpreter.py.
+>
+> Cuando agregues este prompt, deja en claro que este fue Refinado con ayuda de
+> Claude Code, según tu respuesta a la implementación de interpret_spi
+
+**Nota:** Este prompt fue refinado con ayuda de Claude Code, a partir de la respuesta de Cursor a la implementación de `interpret_spi`.
+
+**Resultado:** Propuse `calculate_activity_indicators(bac, planned_progress, actual_progress, ac) -> ActivityIndicators` (NamedTuple con las 8 métricas + `cpi_interpretation`/`spi_interpretation`). Para el consolidado, propuse `calculate_project_consolidated(activities: list[ActivityInput]) -> ProjectConsolidatedIndicators`, que recibe los datos **crudos** de cada actividad (no los `ActivityIndicators` ya calculados) y sube ella misma `total_bac`/`total_pv`/`total_ev`/`total_ac` usando `calculate_pv`/`calculate_ev` directamente — nunca llama a `calculate_cpi`/`calculate_spi` por actividad, solo una vez sobre los totales. Confirmé que esto satisface el punto 3 por construcción: la función ni siquiera tiene acceso a un CPI/SPI individual, así que promediarlos no es solo una mala práctica evitada por disciplina, sino una operación imposible dado el tipo de dato que recibe.
+
+---
+
+### 26. Confirmación del diseño de indicators.py y ciclo TDD completo
+
+> Confirmado, el diseño es correcto
+
+**Resultado:** Implementé `indicators.py` completo siguiendo exactamente el diseño confirmado en la entrada 25, sin desviaciones. Ciclo TDD en dos partes:
+
+1. `ActivityIndicators` + `calculate_activity_indicators`: 3 tests (8 métricas + interpretaciones para caso típico, avance real=0, y AC=0 con proyecto recién creado). Verifiqué a mano los valores esperados de CPI≈0.9333, SPI≈1.1667, EAC≈8.571.428,57 y VAC≈-571.428,57 antes de escribir el assert, y coincidieron exactamente con lo que produjo el código.
+2. `ActivityInput` + `ProjectConsolidatedIndicators` + `calculate_project_consolidated`: 4 tests, incluyendo el caso crítico "mixed AC zero" (una actividad con `AC=0`, cuyo CPI individual sería `None`, mezclada con otra que sí tiene costo) — confirmé que el CPI consolidado (`1.0`) se deriva correctamente de `total_ac > 0`, nunca de los índices individuales.
+
+Cierre del módulo `app/services/evm/`: **38/38 tests en verde, 100% de cobertura** en `calculator.py`, `enums.py`, `interpreter.py` e `indicators.py` — muy por encima del gate mínimo del 80% exigido en `pyproject.toml`. Todos los edge cases explícitos del brief (AC=0, avance real=0, sin actividades, consolidado sumando antes de derivar) quedaron cubiertos con pruebas.
+
+---
