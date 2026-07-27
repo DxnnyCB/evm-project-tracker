@@ -4,6 +4,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.activity import ActivityWithIndicators
+from app.schemas.rounding import round_for_presentation, round_for_presentation_optional
 from app.services.evm.enums import CpiStatus, SpiStatus
 from app.services.evm.indicators import ProjectConsolidatedIndicators
 
@@ -26,6 +27,32 @@ class ProjectRead(BaseModel):
 
 
 class ProjectConsolidatedIndicatorsSchema(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total_bac": "8000000.00",
+                "total_pv": "4700000.00",
+                "total_ev": "4700000.00",
+                "total_ac": "5100000.00",
+                "cv": "-400000.00",
+                "sv": "0.00",
+                "cpi": "0.9216",
+                "spi": "1.0000",
+                "eac": "8680851.06",
+                "vac": "-680851.06",
+                "cpi_status": "over_budget",
+                "cpi_message": (
+                    "Sobre presupuesto: el proyecto está gastando más de lo "
+                    "planificado para el avance logrado."
+                ),
+                "spi_status": "on_schedule",
+                "spi_message": (
+                    "En cronograma: el avance real coincide con el avance planificado."
+                ),
+            }
+        }
+    )
+
     total_bac: Decimal
     total_pv: Decimal
     total_ev: Decimal
@@ -46,16 +73,16 @@ class ProjectConsolidatedIndicatorsSchema(BaseModel):
         """Aplana el `ProjectConsolidatedIndicators` del service al contrato
         plano del API."""
         return cls(
-            total_bac=consolidated.total_bac,
-            total_pv=consolidated.total_pv,
-            total_ev=consolidated.total_ev,
-            total_ac=consolidated.total_ac,
-            cv=consolidated.cv,
-            sv=consolidated.sv,
-            cpi=consolidated.cpi,
-            spi=consolidated.spi,
-            eac=consolidated.eac,
-            vac=consolidated.vac,
+            total_bac=round_for_presentation(consolidated.total_bac),
+            total_pv=round_for_presentation(consolidated.total_pv),
+            total_ev=round_for_presentation(consolidated.total_ev),
+            total_ac=round_for_presentation(consolidated.total_ac),
+            cv=round_for_presentation(consolidated.cv),
+            sv=round_for_presentation(consolidated.sv),
+            cpi=round_for_presentation_optional(consolidated.cpi),
+            spi=round_for_presentation_optional(consolidated.spi),
+            eac=round_for_presentation_optional(consolidated.eac),
+            vac=round_for_presentation_optional(consolidated.vac),
             cpi_status=consolidated.cpi_interpretation.status,
             cpi_message=consolidated.cpi_interpretation.message,
             spi_status=consolidated.spi_interpretation.status,

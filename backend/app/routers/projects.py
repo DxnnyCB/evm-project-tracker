@@ -25,6 +25,8 @@ from app.services.evm.indicators import (
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
+PROJECT_NOT_FOUND_RESPONSE = {status.HTTP_404_NOT_FOUND: {"description": "Project not found"}}
+
 
 def _get_project_or_404(db: Session, project_id: int) -> Project:
     project = project_repository.get_by_id(db, project_id)
@@ -47,7 +49,11 @@ def list_projects(db: Session = Depends(get_db)) -> list[ProjectRead]:
     return [ProjectRead.model_validate(project) for project in projects]
 
 
-@router.get("/{project_id}", response_model=ProjectDetail)
+@router.get(
+    "/{project_id}",
+    response_model=ProjectDetail,
+    responses=PROJECT_NOT_FOUND_RESPONSE,
+)
 def get_project_detail(project_id: int, db: Session = Depends(get_db)) -> ProjectDetail:
     """Proyecto + actividades (cada una con sus 8 indicadores EVM) + consolidado."""
     project = _get_project_or_404(db, project_id)
@@ -94,7 +100,11 @@ def get_project_detail(project_id: int, db: Session = Depends(get_db)) -> Projec
     )
 
 
-@router.patch("/{project_id}", response_model=ProjectRead)
+@router.patch(
+    "/{project_id}",
+    response_model=ProjectRead,
+    responses=PROJECT_NOT_FOUND_RESPONSE,
+)
 def update_project(
     project_id: int, data: ProjectUpdate, db: Session = Depends(get_db)
 ) -> ProjectRead:
@@ -104,7 +114,11 @@ def update_project(
     return ProjectRead.model_validate(project)
 
 
-@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{project_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=PROJECT_NOT_FOUND_RESPONSE,
+)
 def delete_project(project_id: int, db: Session = Depends(get_db)) -> None:
     """Elimina el proyecto (CASCADE elimina sus actividades)."""
     project = _get_project_or_404(db, project_id)
@@ -115,6 +129,7 @@ def delete_project(project_id: int, db: Session = Depends(get_db)) -> None:
     "/{project_id}/activities",
     response_model=ActivityRead,
     status_code=status.HTTP_201_CREATED,
+    responses=PROJECT_NOT_FOUND_RESPONSE,
 )
 def create_activity(
     project_id: int, data: ActivityCreate, db: Session = Depends(get_db)
