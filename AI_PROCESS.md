@@ -148,3 +148,65 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 **Resultado:** Volví a correr el script de verificación contra la base real (no repetí de memoria) y reporté el output textual de cada prueba: creación exitosa de proyecto+actividad, `IntegrityError` de Postgres citando explícitamente `ck_activities_bac_positive` al insertar `bac=-100`, y `0` actividades restantes tras borrar el proyecto (CASCADE). Al terminar, dejé la base limpia con `downgrade base` + `upgrade head`.
 
 ---
+
+### 13. Definición de test cases para el módulo EVM (TDD estricto)
+
+> Excelente, ahora quiero implementar TDD estricto, para esto, propon una lista de test cases (nombres de la función y qué validan), sin implementación, tal cual como hicimos en la estructuración de carpetas
+
+**Resultado:** Propuse dividir `app/services/evm/` en `calculator.py` (fórmulas puras), `interpreter.py` (interpretación de CPI/SPI) e `indicators.py` (orquestación por actividad y consolidado de proyecto), con una lista completa de nombres de test cubriendo cada fórmula, sus indeterminaciones (0/0 y positivo/0) y los edge cases explícitos del brief (AC=0, avance real=0, proyecto sin actividades, consolidado sumando antes de derivar índices). Dejé 2 decisiones abiertas: qué retornar en CPI/SPI cuando el numerador es positivo y el denominador cero, y si el módulo debe operar con `Decimal` en vez de `float`.
+
+---
+
+### 14. Decisiones de contrato EVM: None unificado + Decimal + ajuste del interpreter
+
+> 1. retorna None, igual que el caso 0/0.
+>    La distinción entre "sin datos" y "costo no registrado" se maneja en el mensaje
+>    de interpretación (interpreter.py), no en el tipo de dato que retorna el cálculo.
+>
+> 2. Confirmado: Decimal, no float, en todo el módulo evm/ — coherente con las
+>    columnas Numeric de Activity, evita errores de precisión en cálculos financieros.
+>
+> Registra el prompt en AI_PROCESS.md. Con esto, ¿puedes ajustar la interpretación
+> de CPI/SPI en interpreter.py para distinguir los dos tipos de None (0/0 vs positivo/0)
+> en el mensaje, aunque el valor numérico sea el mismo en ambos casos?
+>
+> Antes de escribir implementación: confirma que entiendes el contrato completo y
+> empecemos con test_calculator.py, un test en rojo a la vez.
+
+**Resultado:** Se cerró el contrato del módulo EVM: `calculator.py` retorna `Decimal | None` de forma uniforme para ambas indeterminaciones (0/0 y positivo/0 devuelven el mismo `None`); la distinción semántica entre "sin datos" y "costo no registrado" vive únicamente en `interpreter.py`, que por tanto necesita recibir también los valores crudos (no solo el índice ya calculado) para poder redactar el mensaje correcto. Ajusté la lista de test cases de `interpreter.py` para reflejar esto y empecé el ciclo TDD por `test_calculator.py`, un test en rojo a la vez.
+
+---
+
+### 15. Separar status machine-readable del mensaje humano en interpreter.py
+
+> Antes de seguir con más tests de interpreter.py, tengo una duda sobre el diseño.
+>
+> Ahora mismo interpret_cpi devuelve solo un string con el mensaje (ej. "sin datos
+> suficientes para evaluar"). Pero pensando en el frontend: cuando construya el
+> semáforo visual (verde/amarillo/rojo) para CPI y SPI, ¿cómo va a saber qué color
+> usar? Si solo tiene el texto del mensaje, tendría que "leer" el string para
+> adivinar si es bueno o malo, eso me parece frágil, qué pasa si cambio el texto
+> del mensaje después? se rompería la lógica de colores
+>
+> ¿No sería mejor que interpret_cpi devuelva dos cosas: un status corto y fijo
+> (algo como "under_budget", "over_budget", "on_budget", "insufficient_data",
+> "cost_not_recorded") que el frontend pueda usar para decidir el color, y aparte
+> el mensaje en texto legible para mostrar? Así separamos "qué significa" de
+> "cómo se dice".
+>
+> ¿Tiene sentido esto o estoy complicando algo que no hace falta? Si tiene sentido,
+> ajusta la firma y los tests antes de seguir.
+>
+> Agrega este prompt al AI PROCESS
+
+**Resultado:** Confirmé que la decisión es acertada y no es sobre-ingeniería (mismo patrón que separar código HTTP de su "reason phrase"). Rediseñé `interpreter.py`: `CpiStatus`/`SpiStatus` como `str, Enum` (serializables directo por Pydantic/FastAPI) y `CpiInterpretation`/`SpiInterpretation` como `NamedTuple(status, message)`. `interpret_cpi`/`interpret_spi` ahora retornan ese objeto en vez de un string suelto. Actualicé la lista de test cases de `interpreter.py` para verificar `.status` (contrato estable para el frontend) y `.message` (texto) por separado.
+
+---
+
+### 16. Ubicación de los enums de status
+
+> Otra pregunta, dónde van a vivir los enum?
+
+**Resultado:** Propuse un módulo dedicado `app/services/evm/enums.py` para `CpiStatus`/`SpiStatus`, separado de `interpreter.py`, anticipando que `app/schemas/` y `app/services/evm/indicators.py` también necesitarán importarlos sin arrastrar la lógica de `interpreter.py`. Los `NamedTuple` (`CpiInterpretation`, `SpiInterpretation`) se quedan en `interpreter.py` por ser la forma de retorno específica de esas funciones, no vocabulario compartido.
+
+---
