@@ -416,3 +416,35 @@ Implementé:
 41/41 tests en verde (38 unitarios de `evm/` + 3 de infraestructura), ruff limpio.
 
 ---
+
+### 30. Diseño del flujo de GET /projects/{project_id} antes de escribir código
+
+> Sigamos con los `routers/`.
+>
+> Antes de implementar el primero, quiero confirmar que el 404 cuando
+> get_by_id devuelve None se maneje únicamente en el router
+>
+> Empecemos por GET /projects/{project_id}, ya que es el endpoint que integra
+> más componentes (proyecto, actividades con indicadores y consolidado).
+>
+> Antes de generar el código, muéstrame el flujo completo de la petición, desde
+> que entra al router hasta la respuesta final, para validar que la separación de
+> responsabilidades sea la que buscamos.
+
+**Resultado:** Propuse el flujo completo: `router` → `project_repository.get_by_id` (404 solo aquí, si es `None`) → `activity_repository.list_by_project` → por cada `Activity`, `indicators.calculate_activity_indicators` (service) + `ActivityIndicatorsSchema.from_domain` (mapeo a schema) → `ActivityWithIndicators` → en paralelo, lista de `ActivityInput` crudos (independiente de los indicadores ya calculados) → `indicators.calculate_project_consolidated` → `ProjectConsolidatedIndicatorsSchema.from_domain` → `ProjectDetail`. Propuse que la traducción de los `NamedTuple` del service (`ActivityIndicators`/`ProjectConsolidatedIndicators`, con `cpi_interpretation`/`spi_interpretation` anidados) a los schemas planos de la API viva como `classmethod from_domain(...)` en cada schema — ni el service conoce Pydantic, ni el router tiene mapeo campo-por-campo disperso inline.
+
+**Nota:** Este prompt fue refinado con ayuda de Claude Code
+
+---
+
+### 31. Confirmación del flujo y arranque de la implementación
+
+> Confirmado el flujo, me parece bien.
+
+**Resultado:** Implementé `ActivityIndicatorsSchema.from_domain` y `ProjectConsolidatedIndicatorsSchema.from_domain` según lo propuesto, y `app/routers/projects.py` con `GET /projects/{project_id}` siguiendo exactamente el flujo confirmado en la entrada 30 (404 solo en el router, service sin cambios, mapeo vía `from_domain`). Agregué el router a `main.py` y 3 tests de integración que validan el contrato completo de la respuesta (proyecto + actividades con sus 8 indicadores + consolidado, proyecto sin actividades, 404 de proyecto inexistente) usando datos reales insertados en Postgres a través de los repositories dentro de la misma transacción de test.
+
+Tuve que agregar `extend-immutable-calls = ["fastapi.Depends"]` en `[tool.ruff.lint.flake8-bugbear]`: ruff marcaba `Depends(get_db)` como B008 ("no llames funciones en defaults de argumentos"), pero ese es exactamente el patrón de inyección de dependencias de FastAPI, no el problema de mutable-default que la regla busca prevenir.
+
+44/44 tests en verde (38 unitarios de `evm/` + 6 de integración), ruff limpio.
+
+---
