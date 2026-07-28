@@ -901,3 +901,13 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Configuré `docs_url="/api-docs"` en `app/main.py` y actualicé las referencias actuales del `README.md`. Levanté una instancia nueva de la API y confirmé que `/api-docs` responde `200`, carga Swagger UI real, y que la ruta anterior `/docs` ahora responde `404`.
 
 ---
+
+### 61. Modal de confirmación y toasts propios (Tailwind, sin librerías)
+
+> Como última mejora, quiero reemplazar los windows y cualquier alert nativo del front por componentes propios de Tailwind, sin librerías nuevas. Un modal de confirmación simple para las acciones de eliminar, con colores acorde a la acción, y un sistema de toast simple tras realizar cualquier operación (crear, editar, eliminar)
+>
+> Antes de ejecutarlo, muéstrame cómo propones estructurarlo para que sea reutilizable. Registra este prompt
+
+**Resultado:** Cursor propuso una estructura reutilizable en `shared/`: `ConfirmDialogComponent` (presentacional) + `ToastContainerComponent` + `ToastService` inyectable, montados una sola vez en `AppComponent`. Tras confirmación ("impleméntalo tal cual"), se implementó: se eliminó `window.confirm` en listado y dashboard; toasts de éxito/error en crear, editar y eliminar.
+
+---
