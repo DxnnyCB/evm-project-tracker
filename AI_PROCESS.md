@@ -883,3 +883,21 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Actualicé `activity-table` para mostrar `CV`, `SV`, `EAC` y `VAC`, manteniendo el scroll horizontal y compactando las celdas numéricas. También agrupé los encabezados en `Base`, `EVM` e `Índices`. Pude verificar técnicamente el template y que el proyecto `72` tiene actividades reales suficientes; la validación visual automática en navegador quedó pendiente en esta sesión porque no tuve acceso a herramientas de browser.
 
 ---
+
+### 60. Mover Swagger de /docs a /api-docs
+
+> El brief pide que Swagger esté accesible en /api-docs o /swagger-ui. Ahora
+> mismo está en /docs, la ruta por defecto de FastAPI. Cambia la ruta a
+> /api-docs para que coincida literalmente con lo que pide el brief.
+>
+> En la instancia de FastAPI (app/main.py), configura docs_url="/api-docs".
+> Verifica también si hay algo que referencie la ruta /docs actual (el README,
+> algún test, o cualquier otro lugar) y actualízalo para que apunte a /api-docs.
+>
+> Levanta el servidor y confirma que /api-docs carga Swagger correctamente y
+> que la ruta anterior /docs ya no existe (o redirige, según cómo se comporte
+> FastAPI con este cambio).
+
+**Resultado:** Configuré `docs_url="/api-docs"` en `app/main.py` y actualicé las referencias actuales del `README.md`. Levanté una instancia nueva de la API y confirmé que `/api-docs` responde `200`, carga Swagger UI real, y que la ruta anterior `/docs` ahora responde `404`.
+
+---
