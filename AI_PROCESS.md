@@ -858,3 +858,16 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Se implementó en `evm-chart`: umbral 10; si hay más, top 10 por `|CV|` con mensaje "Mostrando N de M (mayor |CV|). La tabla y el consolidado muestran el proyecto completo."
 
 ---
+
+### 58. Ajustar ejemplos OpenAPI al redondeo real de la API
+
+> En ActivityIndicatorsSchema y ProjectConsolidatedIndicatorsSchema, los ejemplos
+> de json_schema_extra todavía muestran índices con 4 decimales (ej. "0.9333"),
+> pero desde el fix de redondeo (entrada 35, adenda) la API nunca devuelve más
+> de 2 decimales. Actualiza los ejemplos a 2 decimales (ej. "0.93"), coherente
+> con lo que la API realmente responde ahora. Verifica en Swagger real que
+> coincidan con lo que devuelve un GET real, no solo que se vean razonables.
+
+**Resultado:** Actualicé los `json_schema_extra` de `ActivityIndicatorsSchema` y `ProjectConsolidatedIndicatorsSchema` para que reflejen respuestas reales con 2 decimales. Verifiqué contra un `GET /projects/103` y el `openapi.json` levantando la API con los cambios: ambos ejemplos coincidieron exactamente con la respuesta real.
+
+---
