@@ -6,52 +6,73 @@
   </div>
 } @else {
   <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-    <table class="w-full min-w-[56rem] border-collapse text-left text-sm">
+    <table class="w-full min-w-[88rem] border-collapse text-left text-sm">
       <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <tr class="border-b border-slate-200">
+          <th class="px-3 py-2 font-semibold align-bottom" rowspan="2">Actividad</th>
+          <th class="px-2 py-2 text-center font-semibold" colspan="4">Base</th>
+          <th class="px-2 py-2 text-center font-semibold" colspan="4">EVM</th>
+          <th class="px-2 py-2 text-center font-semibold" colspan="4">Índices</th>
+          <th class="px-3 py-2 font-semibold align-bottom" rowspan="2">Estado</th>
+          <th class="px-3 py-2 font-semibold align-bottom" rowspan="2">Acciones</th>
+        </tr>
         <tr>
-          <th class="px-3 py-3 font-semibold">Actividad</th>
-          <th class="px-3 py-3 font-semibold">BAC</th>
-          <th class="px-3 py-3 font-semibold">Plan %</th>
-          <th class="px-3 py-3 font-semibold">Real %</th>
-          <th class="px-3 py-3 font-semibold">AC</th>
-          <th class="px-3 py-3 font-semibold">PV</th>
-          <th class="px-3 py-3 font-semibold">EV</th>
-          <th class="px-3 py-3 font-semibold">CPI</th>
-          <th class="px-3 py-3 font-semibold">SPI</th>
-          <th class="px-3 py-3 font-semibold">Estado</th>
-          <th class="px-3 py-3 font-semibold">Acciones</th>
+          <th class="px-2 py-2 font-semibold">BAC</th>
+          <th class="px-2 py-2 font-semibold">Plan %</th>
+          <th class="px-2 py-2 font-semibold">Real %</th>
+          <th class="px-2 py-2 font-semibold">AC</th>
+          <th class="px-2 py-2 font-semibold">PV</th>
+          <th class="px-2 py-2 font-semibold">EV</th>
+          <th class="px-2 py-2 font-semibold">CV</th>
+          <th class="px-2 py-2 font-semibold">SV</th>
+          <th class="px-2 py-2 font-semibold">CPI</th>
+          <th class="px-2 py-2 font-semibold">SPI</th>
+          <th class="px-2 py-2 font-semibold">EAC</th>
+          <th class="px-2 py-2 font-semibold">VAC</th>
         </tr>
       </thead>
       <tbody>
         @for (activity of activities; track activity.id) {
           <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80">
-            <td class="px-3 py-3 font-semibold text-slate-900">
+            <td class="min-w-[12rem] px-3 py-2.5 font-semibold text-slate-900">
               {{ activity.name }}
               <span class="mt-0.5 block text-xs font-normal text-slate-500"
                 >#{{ activity.id }}</span
               >
             </td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">{{ activity.bac }}</td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">{{ activity.bac }}</td>
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
               {{ activity.planned_progress }}
             </td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
               {{ activity.actual_progress }}
             </td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">{{ activity.ac }}</td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">{{ activity.ac }}</td>
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
               {{ activity.indicators.pv }}
             </td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
               {{ activity.indicators.ev }}
             </td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
+              {{ activity.indicators.cv }}
+            </td>
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
+              {{ activity.indicators.sv }}
+            </td>
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
               {{ formatIndex(activity.indicators.cpi) }}
             </td>
-            <td class="px-3 py-3 tabular-nums text-slate-800">
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
               {{ formatIndex(activity.indicators.spi) }}
             </td>
-            <td class="px-3 py-3">
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
+              {{ formatIndex(activity.indicators.eac) }}
+            </td>
+            <td class="whitespace-nowrap px-2 py-2.5 tabular-nums text-slate-800">
+              {{ formatIndex(activity.indicators.vac) }}
+            </td>
+            <td class="px-3 py-2.5">
               <div class="flex flex-col gap-1.5">
                 <app-status-badge
                   kind="cpi"
@@ -65,7 +86,7 @@
                 />
               </div>
             </td>
-            <td class="px-3 py-3">
+            <td class="px-3 py-2.5">
               <div class="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
