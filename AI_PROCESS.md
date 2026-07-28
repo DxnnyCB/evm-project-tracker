@@ -911,3 +911,15 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Cursor propuso una estructura reutilizable en `shared/`: `ConfirmDialogComponent` (presentacional) + `ToastContainerComponent` + `ToastService` inyectable, montados una sola vez en `AppComponent`. Tras confirmación ("impleméntalo tal cual"), se implementó: se eliminó `window.confirm` en listado y dashboard; toasts de éxito/error en crear, editar y eliminar.
 
 ---
+
+### 62. Editar nombre del proyecto desde el dashboard
+
+> Se nos escapó algo. Me di cuenta que no hay forma de editar el nombre de un proyecto desde la UI,
+> aunque el backend ya soporta PATCH /projects/{project_id} y está probado.
+>
+> Agrega la posibilidad de editar el nombre del proyecto desde project-dashboard,
+> en el header donde se muestra el nombre actual. Agrega este prompt
+
+**Resultado:** En el header del dashboard agregué edición inline del nombre (Editar → input + Guardar/Cancelar) vía `PATCH /projects/{id}` ya expuesto en `ProjectService.update`, con toast de éxito/error.
+
+---
