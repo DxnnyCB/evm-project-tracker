@@ -1,1 +1,118 @@
-<p>project-list works!</p>
+<section class="mx-auto max-w-xl px-5 py-8 pb-12">
+  <header class="mb-8">
+    <h1 class="m-0 mb-2 text-3xl font-bold tracking-tight text-slate-900">
+      Proyectos
+    </h1>
+    <p class="m-0 text-slate-600 leading-relaxed">
+      Abre un proyecto para ver su análisis de Valor Ganado.
+    </p>
+  </header>
+
+  @if (errorMessage) {
+    <div
+      class="mb-6 flex flex-wrap items-center gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-800"
+      role="alert"
+    >
+      {{ errorMessage }}
+      <button
+        type="button"
+        class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-red-800 underline"
+        (click)="loadProjects()"
+      >
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Zona 1: flujo principal — listar y abrir -->
+  <section aria-labelledby="projects-list-heading" class="mb-12">
+    <h2
+      id="projects-list-heading"
+      class="m-0 mb-4 text-lg font-semibold text-slate-800"
+    >
+      Mis proyectos
+    </h2>
+
+    @if (loading) {
+      <p class="m-0 text-slate-600">Cargando proyectos…</p>
+    } @else if (projects.length === 0) {
+      <div
+        class="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-6 text-center"
+      >
+        <p class="m-0 mb-2 font-medium text-slate-800">Aún no hay proyectos</p>
+        <p class="m-0 text-sm text-slate-600">
+          Crea el primero en la sección de abajo.
+        </p>
+      </div>
+    } @else {
+      <ul class="m-0 flex list-none flex-col gap-3 p-0" aria-label="Lista de proyectos">
+        @for (project of projects; track project.id) {
+          <li
+            class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2 shadow-sm"
+          >
+            <a
+              class="flex min-w-0 flex-1 cursor-pointer items-baseline justify-between gap-4 rounded-md px-3 py-3 text-inherit no-underline hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-600"
+              [routerLink]="['/projects', project.id]"
+            >
+              <span class="font-semibold text-slate-900">{{ project.name }}</span>
+              <span class="shrink-0 text-sm tabular-nums text-slate-500"
+                >#{{ project.id }}</span
+              >
+            </a>
+            <button
+              type="button"
+              class="mr-1 cursor-pointer rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+              (click)="deleteProject(project, $event)"
+              [attr.aria-label]="'Eliminar ' + project.name"
+            >
+              Eliminar
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <!-- Separador visual entre flujos -->
+  <hr class="mb-10 border-0 border-t border-slate-300" />
+
+  <!-- Zona 2: flujo secundario — crear -->
+  <section aria-labelledby="create-project-heading">
+    <h2
+      id="create-project-heading"
+      class="m-0 mb-1 text-lg font-semibold text-slate-800"
+    >
+      Crear proyecto
+    </h2>
+    <p class="m-0 mb-5 text-sm text-slate-600">
+      Agrega un proyecto nuevo. Luego podrás abrirlo desde la lista de arriba.
+    </p>
+
+    <form
+      class="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-end"
+      (ngSubmit)="createProject()"
+    >
+      <label class="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span class="text-sm font-semibold text-slate-700">Nombre</span>
+        <input
+          type="text"
+          name="newProjectName"
+          class="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/30 disabled:bg-slate-100 disabled:text-slate-500"
+          [(ngModel)]="newProjectName"
+          maxlength="200"
+          placeholder="Ej. Ampliación vía principal"
+          [disabled]="creating"
+          required
+          autocomplete="off"
+        />
+      </label>
+      <button
+        type="submit"
+        class="cursor-pointer rounded-md border border-emerald-800 bg-emerald-700 px-5 py-2.5 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-55"
+        [disabled]="creating || !newProjectName.trim()"
+      >
+        {{ creating ? 'Creando…' : 'Crear' }}
+      </button>
+    </form>
+  </section>
+</section>
