@@ -677,6 +677,8 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 >
 > Aplícalo con CSS simple en el componente, nada de dependencias nuevas.
 
+**Nota:** El prompt tiene un empalme real al armarlo (línea de separación duplicada + cierre que pide CSS simple sin dependencias nuevas, contradictorio con Tailwind). No se alteró la cita. Al ejecutarlo, Cursor priorizó la instrucción principal (instalar y usar Tailwind) sobre esa contradicción del cierre.
+
 **Resultado:** `ng add tailwindcss` no aplica schematics en v4; se usó el setup manual oficial (`tailwindcss` + `@tailwindcss/postcss` + `postcss`, `.postcssrc.json`, `@import "tailwindcss"`). Se reestilizó `project-list` solo con utilidades Tailwind (tarjetas, hover, Crear/Eliminar, gaps). Build limpio.
 
 ---
