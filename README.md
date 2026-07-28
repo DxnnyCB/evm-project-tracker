@@ -15,12 +15,13 @@ Actualizar esta lista en cada PR para que el README de `main` siempre refleje el
 - [x] Capa de servicio EVM (`calculator.py`, `interpreter.py`, `indicators.py`) — cálculo de los 8 indicadores por actividad y consolidado de proyecto, con interpretación machine-readable (status) + human-readable (mensaje) de CPI/SPI. 100% de cobertura.
 - [x] `repositories/` (acceso a datos puro) y `schemas/` (Pydantic, con validación espejando los `CheckConstraint` de la BD)
 - [x] Endpoints CRUD completos: `GET/POST /projects`, `GET/PATCH/DELETE /projects/{id}`, `POST /projects/{id}/activities`, `GET/PATCH/DELETE /activities/{id}`
-- [x] Tests unitarios (`services/evm`) e integración (endpoints, contra Postgres real con rollback por test) — 62 tests, cobertura ≥80% cumplida
+- [x] OpenAPI/Swagger: descripciones por endpoint, `responses` 404 documentados, ejemplos realistas de Decimal en los schemas de indicadores
+- [x] Tests unitarios (`services/evm`) e integración (endpoints, contra Postgres real con rollback por test) — 66 tests, cobertura ≥80% cumplida
+- [x] Frontend Angular: listado de proyectos, dashboard EVM (consolidado + semáforo CPI/SPI, tabla de actividades, formulario colapsable, gráfica PV/EV/AC con Chart.js), Tailwind CSS
 
 **Pendiente**
 
-- [ ] Frontend Angular (dashboard, semáforo CPI/SPI, gráfica PV/EV/AC)
-- [ ] OpenAPI documentado por endpoint (descripciones/ejemplos más detallados en Swagger) + video + cierre de `AI_PROCESS.md`
+- [ ] Video de entrega (máx. 10 min)
 
 ## Stack
 
@@ -29,7 +30,7 @@ Actualizar esta lista en cada PR para que el README de `main` siempre refleje el
 | Backend | Python + FastAPI |
 | ORM / migraciones | SQLAlchemy + Alembic |
 | Base de datos | PostgreSQL |
-| Frontend | Angular *(pendiente)* |
+| Frontend | Angular 19 + Tailwind CSS + Chart.js |
 | Tests | pytest + pytest-cov + httpx |
 | Linter / formateador | ruff |
 
@@ -69,6 +70,7 @@ backend/
 
 - Python ≥ 3.11
 - PostgreSQL corriendo localmente (o accesible por red)
+- Node.js `^18.19.1 || ^20.11.1 || >=22.0.0` (engines de Angular CLI 19)
 
 ## Configurar la base de datos
 
@@ -139,6 +141,27 @@ Una vez levantada, en cualquier sistema operativo:
 - API: http://127.0.0.1:8000
 - Health: http://127.0.0.1:8000/health → `{"status":"ok"}`
 - Swagger UI: http://127.0.0.1:8000/docs
+
+## Cómo correr el frontend
+
+El frontend vive en `frontend/` (Angular 19). El backend debe estar corriendo en http://127.0.0.1:8000 — la app consume esa API y el backend permite CORS desde `http://localhost:4200` y `http://127.0.0.1:4200`.
+
+```bash
+cd frontend
+
+# Instalar dependencias (solo la primera vez, o tras cambios en package.json)
+npm install
+
+# Levantar el servidor de desarrollo
+npx ng serve
+```
+
+Una vez levantado:
+
+- App: http://localhost:4200 (también válido http://127.0.0.1:4200)
+- Recarga automática al editar archivos fuente
+
+Si el navegador muestra errores de red o CORS al listar proyectos, confirma que uvicorn está activo en el puerto 8000.
 
 ## Migraciones (Alembic)
 
