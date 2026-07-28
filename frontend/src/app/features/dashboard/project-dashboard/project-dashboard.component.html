@@ -49,37 +49,26 @@
 
     <hr class="mb-10 border-0 border-t border-slate-300" />
 
-    <!-- Zona 3: tabla de actividades (pendiente) -->
+    <!-- Zona 3: tabla de actividades -->
     <section class="mb-10" aria-labelledby="activities-heading">
       <h2 id="activities-heading" class="m-0 mb-3 text-lg font-semibold text-slate-800">
         Actividades
       </h2>
-      <div
-        class="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500"
-      >
-        Tabla de actividades pendiente.
-        @if (project.activities.length === 0) {
-          <span class="block mt-1">Este proyecto aún no tiene actividades.</span>
-        } @else {
-          <span class="block mt-1"
-            >{{ project.activities.length }} actividad(es) cargada(s) desde la API.</span
-          >
-        }
-      </div>
+      <app-activity-table
+        [activities]="project.activities"
+        (edit)="onEditActivity($event)"
+        (remove)="onRemoveActivity($event)"
+      />
     </section>
 
     <hr class="mb-10 border-0 border-t border-slate-300" />
 
-    <!-- Zona 4: formulario colapsable (pendiente) -->
-    <section aria-labelledby="activity-form-heading">
-      <h2 id="activity-form-heading" class="m-0 mb-3 text-lg font-semibold text-slate-800">
-        Agregar o editar actividad
-      </h2>
-      <div
-        class="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500"
-      >
-        Formulario colapsable pendiente.
-      </div>
-    </section>
+    <!-- Zona 4: formulario colapsable -->
+    <app-activity-form
+      [activity]="activityToEdit"
+      [saving]="savingActivity"
+      (save)="onSaveActivity($event)"
+      (cancel)="onCancelActivityForm()"
+    />
   }
 </section>
