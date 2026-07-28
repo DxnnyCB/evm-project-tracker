@@ -109,7 +109,7 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 
 > Bien, ahora toca definir los modelos. Decidamos los campos y la relaciones
 
-**Resultado:** Propuse la relación Project 1—N Activity y los campos de ambas tablas, dejando los indicadores EVM (PV, EV, CPI, etc.) fuera de la base de datos — se calculan al vuelo en el service, nunca persistidos. Dejé 5 decisiones abiertas para que el usuario definiera: tipo de PK (UUID vs Integer), persistencia o no de los indicadores, comportamiento de borrado (CASCADE vs RESTRICT), si mantener el campo `description` en Project, e idioma de los nombres de columna.
+**Resultado:** Cursor propuso la relación Project 1—N Activity y los campos de ambas tablas, dejando los indicadores EVM (PV, EV, CPI, etc.) fuera de la base de datos — se calculan al vuelo en el service, nunca persistidos. Dejé 5 decisiones abiertas para que yo definiera: tipo de PK (UUID vs Integer), persistencia o no de los indicadores, comportamiento de borrado (CASCADE vs RESTRICT), si mantener el campo `description` en Project, e idioma de los nombres de columna.
 
 ---
 
@@ -153,7 +153,7 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 
 > Excelente, ahora quiero implementar TDD estricto, para esto, propon una lista de test cases (nombres de la función y qué validan), sin implementación, tal cual como hicimos en la estructuración de carpetas
 
-**Resultado:** Propuse dividir `app/services/evm/` en `calculator.py` (fórmulas puras), `interpreter.py` (interpretación de CPI/SPI) e `indicators.py` (orquestación por actividad y consolidado de proyecto), con una lista completa de nombres de test cubriendo cada fórmula, sus indeterminaciones (0/0 y positivo/0) y los edge cases explícitos del brief (AC=0, avance real=0, proyecto sin actividades, consolidado sumando antes de derivar índices). Dejé 2 decisiones abiertas: qué retornar en CPI/SPI cuando el numerador es positivo y el denominador cero, y si el módulo debe operar con `Decimal` en vez de `float`.
+**Resultado:** Cursor propuso dividir `app/services/evm/` en `calculator.py` (fórmulas puras), `interpreter.py` (interpretación de CPI/SPI) e `indicators.py` (orquestación por actividad y consolidado de proyecto), con una lista completa de nombres de test cubriendo cada fórmula, sus indeterminaciones (0/0 y positivo/0) y los edge cases explícitos del brief (AC=0, avance real=0, proyecto sin actividades, consolidado sumando antes de derivar índices). Dejé 2 decisiones abiertas para que yo definiera: qué retornar en CPI/SPI cuando el numerador es positivo y el denominador cero, y si el módulo debe operar con `Decimal` en vez de `float`.
 
 ---
 
