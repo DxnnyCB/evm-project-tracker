@@ -42,12 +42,12 @@ class ActivityIndicatorsSchema(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "pv": "4800000.00",
+                "pv": "8000000.00",
                 "ev": "5600000.00",
                 "cv": "-400000.00",
-                "sv": "800000.00",
-                "cpi": "0.9333",
-                "spi": "1.1667",
+                "sv": "-2400000.00",
+                "cpi": "0.93",
+                "spi": "0.70",
                 "eac": "8571428.57",
                 "vac": "-571428.57",
                 "cpi_status": "over_budget",
@@ -55,9 +55,10 @@ class ActivityIndicatorsSchema(BaseModel):
                     "Sobre presupuesto: el proyecto está gastando más de lo "
                     "planificado para el avance logrado."
                 ),
-                "spi_status": "ahead_of_schedule",
+                "spi_status": "behind_schedule",
                 "spi_message": (
-                    "Adelantado: el avance real supera al avance planificado para esta fecha."
+                    "Atrasado: el avance real está por debajo del avance "
+                    "planificado para esta fecha."
                 ),
             }
         }

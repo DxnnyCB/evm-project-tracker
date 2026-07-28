@@ -31,23 +31,24 @@ class ProjectConsolidatedIndicatorsSchema(BaseModel):
         json_schema_extra={
             "example": {
                 "total_bac": "8000000.00",
-                "total_pv": "4700000.00",
-                "total_ev": "4700000.00",
-                "total_ac": "5100000.00",
+                "total_pv": "8000000.00",
+                "total_ev": "5600000.00",
+                "total_ac": "6000000.00",
                 "cv": "-400000.00",
-                "sv": "0.00",
-                "cpi": "0.9216",
-                "spi": "1.0000",
-                "eac": "8680851.06",
-                "vac": "-680851.06",
+                "sv": "-2400000.00",
+                "cpi": "0.93",
+                "spi": "0.70",
+                "eac": "8571428.57",
+                "vac": "-571428.57",
                 "cpi_status": "over_budget",
                 "cpi_message": (
                     "Sobre presupuesto: el proyecto está gastando más de lo "
                     "planificado para el avance logrado."
                 ),
-                "spi_status": "on_schedule",
+                "spi_status": "behind_schedule",
                 "spi_message": (
-                    "En cronograma: el avance real coincide con el avance planificado."
+                    "Atrasado: el avance real está por debajo del avance "
+                    "planificado para esta fecha."
                 ),
             }
         }
