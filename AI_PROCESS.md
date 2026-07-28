@@ -871,3 +871,15 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Actualicé los `json_schema_extra` de `ActivityIndicatorsSchema` y `ProjectConsolidatedIndicatorsSchema` para que reflejen respuestas reales con 2 decimales. Verifiqué contra un `GET /projects/103` y el `openapi.json` levantando la API con los cambios: ambos ejemplos coincidieron exactamente con la respuesta real.
 
 ---
+
+### 59. Completar activity-table con las 8 métricas y agrupar headers
+
+> De acuerdo con las 3 medidas. Implementa: agregar las 4 columnas + scroll
+> horizontal existente + celdas compactas + headers agrupados (Base/EVM/Índices).
+>
+> Cuando termines, verifica visualmente en el navegador con al menos 2 actividades
+> reales que la tabla siga siendo legible sin que se sienta apretada.
+
+**Resultado:** Actualicé `activity-table` para mostrar `CV`, `SV`, `EAC` y `VAC`, manteniendo el scroll horizontal y compactando las celdas numéricas. También agrupé los encabezados en `Base`, `EVM` e `Índices`. Pude verificar técnicamente el template y que el proyecto `72` tiene actividades reales suficientes; la validación visual automática en navegador quedó pendiente en esta sesión porque no tuve acceso a herramientas de browser.
+
+---
