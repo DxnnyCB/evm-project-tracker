@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import DbSession
 from app.models.project import Project
 from app.repositories import activity_repository, project_repository
 from app.schemas.activity import (
@@ -36,14 +36,14 @@ def _get_project_or_404(db: Session, project_id: int) -> Project:
 
 
 @router.post("", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
-def create_project(data: ProjectCreate, db: Session = Depends(get_db)) -> ProjectRead:
+def create_project(data: ProjectCreate, db: DbSession) -> ProjectRead:
     """Crea un proyecto nuevo."""
     project = project_repository.create(db, data.name)
     return ProjectRead.model_validate(project)
 
 
 @router.get("", response_model=list[ProjectRead])
-def list_projects(db: Session = Depends(get_db)) -> list[ProjectRead]:
+def list_projects(db: DbSession) -> list[ProjectRead]:
     """Listado liviano de proyectos, sin calcular indicadores EVM."""
     projects = project_repository.list_all(db)
     return [ProjectRead.model_validate(project) for project in projects]
@@ -54,7 +54,7 @@ def list_projects(db: Session = Depends(get_db)) -> list[ProjectRead]:
     response_model=ProjectDetail,
     responses=PROJECT_NOT_FOUND_RESPONSE,
 )
-def get_project_detail(project_id: int, db: Session = Depends(get_db)) -> ProjectDetail:
+def get_project_detail(project_id: int, db: DbSession) -> ProjectDetail:
     """Proyecto + actividades (cada una con sus 8 indicadores EVM) + consolidado."""
     project = _get_project_or_404(db, project_id)
     activities = activity_repository.list_by_project(db, project_id)
@@ -105,9 +105,7 @@ def get_project_detail(project_id: int, db: Session = Depends(get_db)) -> Projec
     response_model=ProjectRead,
     responses=PROJECT_NOT_FOUND_RESPONSE,
 )
-def update_project(
-    project_id: int, data: ProjectUpdate, db: Session = Depends(get_db)
-) -> ProjectRead:
+def update_project(project_id: int, data: ProjectUpdate, db: DbSession) -> ProjectRead:
     """Actualiza el nombre del proyecto (parcial)."""
     project = _get_project_or_404(db, project_id)
     project = project_repository.update(db, project, data.name)
@@ -119,7 +117,7 @@ def update_project(
     status_code=status.HTTP_204_NO_CONTENT,
     responses=PROJECT_NOT_FOUND_RESPONSE,
 )
-def delete_project(project_id: int, db: Session = Depends(get_db)) -> None:
+def delete_project(project_id: int, db: DbSession) -> None:
     """Elimina el proyecto (CASCADE elimina sus actividades)."""
     project = _get_project_or_404(db, project_id)
     project_repository.delete(db, project)
@@ -132,7 +130,7 @@ def delete_project(project_id: int, db: Session = Depends(get_db)) -> None:
     responses=PROJECT_NOT_FOUND_RESPONSE,
 )
 def create_activity(
-    project_id: int, data: ActivityCreate, db: Session = Depends(get_db)
+    project_id: int, data: ActivityCreate, db: DbSession
 ) -> ActivityRead:
     """Crea una actividad dentro de un proyecto existente."""
     _get_project_or_404(db, project_id)

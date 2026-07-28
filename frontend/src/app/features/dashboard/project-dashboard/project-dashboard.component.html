@@ -1,4 +1,70 @@
-<section class="placeholder">
-  <a routerLink="/projects" class="back">← Volver a proyectos</a>
-  <p>Dashboard del proyecto — pendiente de cablear.</p>
+<section class="mx-auto max-w-5xl px-5 py-8 pb-12">
+  <a
+    routerLink="/projects"
+    class="mb-6 inline-block font-semibold text-emerald-800 no-underline hover:underline"
+  >
+    ← Volver a proyectos
+  </a>
+
+  @if (errorMessage) {
+    <div
+      class="mb-6 flex flex-wrap items-center gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-800"
+      role="alert"
+    >
+      {{ errorMessage }}
+      @if (project === null && !loading) {
+        <a routerLink="/projects" class="font-semibold text-red-800 underline">
+          Ir al listado
+        </a>
+      }
+    </div>
+  }
+
+  @if (loading) {
+    <p class="m-0 text-slate-600">Cargando proyecto…</p>
+  } @else if (project) {
+    <header class="mb-8">
+      <h1 class="m-0 mb-1 text-3xl font-bold tracking-tight text-slate-900">
+        {{ project.name }}
+      </h1>
+      <p class="m-0 text-sm text-slate-500">Proyecto #{{ project.id }}</p>
+    </header>
+
+    <!-- Zona 1: consolidado + semáforo -->
+    <div class="mb-10">
+      <app-consolidated-panel [consolidated]="project.consolidated" />
+    </div>
+
+    <!-- Zona 2: gráfica PV / EV / AC -->
+    <section class="mb-10" aria-labelledby="chart-heading">
+      <h2 id="chart-heading" class="m-0 mb-3 text-lg font-semibold text-slate-800">
+        Comparación PV / EV / AC
+      </h2>
+      <app-evm-chart [activities]="project.activities" />
+    </section>
+
+    <hr class="mb-10 border-0 border-t border-slate-300" />
+
+    <!-- Zona 3: tabla de actividades -->
+    <section class="mb-10" aria-labelledby="activities-heading">
+      <h2 id="activities-heading" class="m-0 mb-3 text-lg font-semibold text-slate-800">
+        Actividades
+      </h2>
+      <app-activity-table
+        [activities]="project.activities"
+        (edit)="onEditActivity($event)"
+        (remove)="onRemoveActivity($event)"
+      />
+    </section>
+
+    <hr class="mb-10 border-0 border-t border-slate-300" />
+
+    <!-- Zona 4: formulario colapsable -->
+    <app-activity-form
+      [activity]="activityToEdit"
+      [saving]="savingActivity"
+      (save)="onSaveActivity($event)"
+      (cancel)="onCancelActivityForm()"
+    />
+  }
 </section>

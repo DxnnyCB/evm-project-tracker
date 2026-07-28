@@ -1,1 +1,137 @@
-<p>activity-form works!</p>
+<section aria-labelledby="activity-form-heading">
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+    <h2 id="activity-form-heading" class="m-0 text-lg font-semibold text-slate-800">
+      @if (isEditMode) {
+        Editar actividad
+      } @else {
+        Agregar actividad
+      }
+    </h2>
+
+    @if (!expanded) {
+      <button
+        type="button"
+        class="cursor-pointer rounded-md border border-emerald-800 bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+        (click)="openForCreate()"
+      >
+        + Nueva actividad
+      </button>
+    }
+  </div>
+
+  @if (!expanded) {
+    <p class="m-0 rounded-lg border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-600">
+      El formulario está oculto. Pulsa “Nueva actividad” o “Editar” en la tabla para abrirlo.
+    </p>
+  } @else {
+    <form
+      class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+      (ngSubmit)="onSubmit()"
+    >
+      @if (validationError) {
+        <div
+          class="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+          role="alert"
+        >
+          {{ validationError }}
+        </div>
+      }
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1.5 sm:col-span-2">
+          <span class="text-sm font-semibold text-slate-700">Nombre</span>
+          <input
+            type="text"
+            name="activityName"
+            class="w-full rounded-md border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/30 disabled:bg-slate-100"
+            [(ngModel)]="name"
+            maxlength="200"
+            required
+            [disabled]="saving"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-semibold text-slate-700">BAC (presupuesto)</span>
+          <input
+            type="text"
+            name="bac"
+            inputmode="decimal"
+            class="w-full rounded-md border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/30 disabled:bg-slate-100"
+            [(ngModel)]="bac"
+            placeholder="8000000"
+            required
+            [disabled]="saving"
+          />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-semibold text-slate-700">AC (costo real)</span>
+          <input
+            type="text"
+            name="ac"
+            inputmode="decimal"
+            class="w-full rounded-md border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/30 disabled:bg-slate-100"
+            [(ngModel)]="ac"
+            placeholder="0"
+            required
+            [disabled]="saving"
+          />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-semibold text-slate-700">Avance planificado (%)</span>
+          <input
+            type="text"
+            name="plannedProgress"
+            inputmode="decimal"
+            class="w-full rounded-md border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/30 disabled:bg-slate-100"
+            [(ngModel)]="plannedProgress"
+            placeholder="60"
+            required
+            [disabled]="saving"
+          />
+        </label>
+
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-semibold text-slate-700">Avance real (%)</span>
+          <input
+            type="text"
+            name="actualProgress"
+            inputmode="decimal"
+            class="w-full rounded-md border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/30 disabled:bg-slate-100"
+            [(ngModel)]="actualProgress"
+            placeholder="70"
+            required
+            [disabled]="saving"
+          />
+        </label>
+      </div>
+
+      <div class="mt-5 flex flex-wrap gap-3">
+        <button
+          type="submit"
+          class="cursor-pointer rounded-md border border-emerald-800 bg-emerald-700 px-5 py-2.5 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-55"
+          [disabled]="saving"
+        >
+          @if (saving) {
+            Guardando…
+          } @else if (isEditMode) {
+            Guardar cambios
+          } @else {
+            Crear actividad
+          }
+        </button>
+        <button
+          type="button"
+          class="cursor-pointer rounded-md border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-55"
+          (click)="onCancel()"
+          [disabled]="saving"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  }
+</section>

@@ -1,1 +1,8 @@
-<p>status-badge works!</p>
+<span
+  class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold"
+  [ngClass]="toneClass()"
+  [attr.title]="label"
+>
+  <span class="opacity-70">{{ kindLabel() }}</span>
+  <span>{{ label }}</span>
+</span>

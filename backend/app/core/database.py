@@ -1,5 +1,7 @@
 from collections.abc import Generator
+from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -12,7 +14,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # predecibles (necesario para poder revertir migraciones de forma confiable).
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "uq": "uq_%(table_name)s_%(constraint_name)s",
     "ck": "ck_%(table_name)s_%(constraint_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
@@ -33,6 +35,12 @@ def get_db() -> Generator[Session, None, None]:
     flush) — el commit es responsabilidad exclusiva de esta unidad de trabajo
     por request, para que los tests de integración puedan envolver toda la
     request en una transacción externa y revertirla sin residuos.
+
+    Importante: debe inyectarse con ``scope="function"`` (ver ``DbSession``).
+    Con el scope por defecto (``"request"``), FastAPI ejecuta el código
+    posterior al ``yield`` *después* de enviar la respuesta HTTP, así que un
+    201 podría llegar al cliente antes del ``commit`` y un GET inmediato no
+    vería el recurso recién creado.
     """
     db = SessionLocal()
     try:
@@ -43,3 +51,7 @@ def get_db() -> Generator[Session, None, None]:
         raise
     finally:
         db.close()
+
+
+# Inyección estándar: commit centralizado en get_db, pero *antes* de responder.
+DbSession = Annotated[Session, Depends(get_db, scope="function")]
