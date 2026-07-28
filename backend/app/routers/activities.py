@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import DbSession
 from app.models.activity import Activity
 from app.repositories import activity_repository
 from app.schemas.activity import (
@@ -29,7 +29,7 @@ def _get_activity_or_404(db: Session, activity_id: int) -> Activity:
     response_model=ActivityWithIndicators,
     responses=ACTIVITY_NOT_FOUND_RESPONSE,
 )
-def get_activity(activity_id: int, db: Session = Depends(get_db)) -> ActivityWithIndicators:
+def get_activity(activity_id: int, db: DbSession) -> ActivityWithIndicators:
     """Actividad + sus 8 indicadores EVM."""
     activity = _get_activity_or_404(db, activity_id)
 
@@ -58,7 +58,7 @@ def get_activity(activity_id: int, db: Session = Depends(get_db)) -> ActivityWit
     responses=ACTIVITY_NOT_FOUND_RESPONSE,
 )
 def update_activity(
-    activity_id: int, data: ActivityUpdate, db: Session = Depends(get_db)
+    activity_id: int, data: ActivityUpdate, db: DbSession
 ) -> ActivityRead:
     """Actualiza una actividad (parcial: solo los campos enviados)."""
     activity = _get_activity_or_404(db, activity_id)
@@ -71,7 +71,7 @@ def update_activity(
     status_code=status.HTTP_204_NO_CONTENT,
     responses=ACTIVITY_NOT_FOUND_RESPONSE,
 )
-def delete_activity(activity_id: int, db: Session = Depends(get_db)) -> None:
+def delete_activity(activity_id: int, db: DbSession) -> None:
     """Elimina una actividad."""
     activity = _get_activity_or_404(db, activity_id)
     activity_repository.delete(db, activity)

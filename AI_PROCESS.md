@@ -731,3 +731,56 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Se implementó `activity-form` colapsable (opción B): crear y editar actividad; el dashboard orquesta create/update + refresh de `ProjectDetail`.
 
 ---
+
+### 53. Implementación de evm-chart (Chart.js)
+
+> Funciona muy bien. Podemos seguir con evm-chart, registra el prompt
+
+**Resultado:** Se implementó `evm-chart` con Chart.js (barras agrupadas PV / EV / AC por actividad) y se cableó en `project-dashboard`.
+
+---
+
+### 54. Bug: actividad nueva no aparece en UI hasta recargar (investigación)
+
+> Encontré un bug: al crear una actividad nueva (probé con la 6ª o 7ª de un
+> proyecto), no aparece ni en activity-table ni en evm-chart hasta que recargo
+> la página manualmente. El consolidado tampoco se actualiza, supongo.
+>
+> Según el diseño que acordamos, el dashboard debería volver a llamar getById
+> tras cualquier mutación y repasar los datos frescos a los hijos. Algo en ese
+> flujo se está rompiendo.
+>
+> Antes de arreglarlo: ¿por qué pasa a partir de cargas algunas actividades y no en las primeras? Eso me hace sospechar que no es un problema puro de sincronización
+> de eventos (que fallaría siempre), sino algo más específico. Investiga y
+> muéstrame la causa raíz antes de aplicar un fix.
+>
+> Agrega el prompt
+
+**Resultado:** Causa raíz identificada (sin fix aún): carrera entre el `commit` de `get_db()` (código después del `yield`, que en FastAPI ≥0.118 corre *después* de enviar la respuesta) y el `getById` inmediato del dashboard. El POST crea con `flush` pero otra sesión aún no ve el row hasta el commit; el GET puede devolver el proyecto sin la actividad nueva. Reproducido con httpx async (1/30 stale). No es un límite del listado ni un fallo de binding de eventos en Angular. Por eso es intermitente y aparece “a partir de varias” (más intentos ⇒ más probabilidad), no en el 100% de las altas.
+
+---
+
+### 55. Fix backend: commit antes de responder (scope=function)
+
+> Fix en el backend, no en el frontend. Un reintento en el cliente ocultaría el
+> problema real: un 201 no debería devolverse si el commit no ha ocurrido
+> todavía — eso rompe la garantía básica de REST de que el recurso ya existe
+> cuando respondes con éxito.
+>
+> Antes de aplicar el fix: explícame por qué el commit corre después de enviar
+> la respuesta en este caso específico  ¿es un comportamiento de FastAPI con
+> esta versión de dependencias async, o algo de cómo está estructurado get_db()
+> que se pueda corregir sin cambiar el patrón de arquitectura que ya tenemos
+> (commit centralizado en get_db, no en los repositories)?
+>
+> Aplica el fix que preserve ese patrón si es posible. Después, repite la prueba
+> de 30 creates concurrentes con httpx para confirmar 0 respuestas stale, no
+> solo "se ve mejor a simple vista".
+>
+> Agrega este prompt y pon de nota que se refinó con ayuda de Claude
+
+**Nota:** Este prompt fue refinado con ayuda de Claude.
+
+**Resultado:** El commit post-respuesta no venía de SQLAlchemy ni de nuestra lógica de negocio: desde FastAPI ≥0.118, las dependencias con `yield` usan por defecto `scope="request"` y ejecutan el código tras el `yield` *después* de enviar la respuesta. Se preservó el patrón (commit solo en `get_db`, repositories con `flush`) exponiendo `DbSession = Annotated[Session, Depends(get_db, scope="function")]`, que hace el commit *antes* de responder. Prueba httpx async 30× create→GET: 0 stale. 66 tests en verde.
+
+---
