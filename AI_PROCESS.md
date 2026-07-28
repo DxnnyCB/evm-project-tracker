@@ -2,8 +2,6 @@
 
 ## Herramientas de IA utilizadas
 
-## Herramientas de IA utilizadas
-
 - **Cursor** (asistente principal de código): tengo suscripción activa, lo que me da acceso a modelos como Claude Opus, Sonnet y Fable directamente en el editor. Esto me permite iterar rápido sobre el código sin salir del flujo de trabajo.
 - **Claude** (investigación conceptual): lo usé por fuera de Cursor para entender EVM a fondo antes de programar — explicaciones del concepto, validación de fórmulas con ejercicios prácticos, y resolución de dudas sobre casos borde matemáticos, antes de traducir ese entendimiento a código.
 - **Por qué esta combinación:** separar la fase de "entender el dominio" de la fase de "escribir código" me permitió llegar a Cursor ya con las fórmulas y los casos borde claros en la cabeza, en vez de aprender EVM al mismo tiempo que programaba — lo que reduce el riesgo de escribir código que "compila y pasa tests" pero sin que yo realmente entienda qué está calculando.
@@ -67,6 +65,8 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 
 > Lee el archivo context.md y .cursor\rules\ai-process-tracking.mdc
 
+**Resultado:** Cursor confirmó el alcance del desafío (CRUD + indicadores EVM, stack FastAPI/Angular/PostgreSQL, entregables y criterios de evaluación) y las reglas de registro textual de prompts en `AI_PROCESS.md` antes de continuar con el desarrollo.
+
 ### 7. Dependencias y configuraciones
 
 > Para este proyecto, recomiéndame librerías y configuraciones que ayuden a la construcción del backend
@@ -101,7 +101,7 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 > Antes de generar código, dame 2 opciones razonables de estructura de carpetas con
 > sus trade-offs, para que yo elija cuál usar.
 
-**Resultado:** Propuso 2 estructuras: A) por capas técnicas (routers/services/models/schemas/repositories) y B) por dominio (evm/, projects/, activities/). Elegí un híbrido: capas técnicas + `app/services/evm/` como subpaquete puro aislado. Se generó el esqueleto, `pyproject.toml` (deps + ruff + cobertura ≥80% sobre services) y un `main.py` mínimo con Swagger en `/docs` verificado.
+**Resultado:** Propuso 2 estructuras: A) por capas técnicas (routers/services/models/schemas/repositories) y B) por dominio (evm/, projects/, activities/). Elegí un híbrido: capas técnicas + `app/services/evm/` como subpaquete puro aislado. Generé el esqueleto, `pyproject.toml` (deps + ruff + cobertura ≥80% sobre services) y un `main.py` mínimo con Swagger en `/docs` verificado.
 
 ---
 
@@ -123,7 +123,7 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 >
 > Respecto al AI_PROCESS.md, registra y esta interacción también
 
-**Resultado:** Se cerró el diseño de los modelos: `id` Integer autoincremental como PK en ambas tablas, indicadores EVM calculados solo en el service (no persistidos), `ON DELETE CASCADE` de Activity hacia Project, sin campo `description` en Project, y nombres de columna en inglés (`bac`, `ac`, `planned_progress`, `actual_progress`).
+**Resultado:** Cerré el diseño de los modelos: `id` Integer autoincremental como PK en ambas tablas, indicadores EVM calculados solo en el service (no persistidos), `ON DELETE CASCADE` de Activity hacia Project, sin campo `description` en Project, y nombres de columna en inglés (`bac`, `ac`, `planned_progress`, `actual_progress`).
 
 **Nota:** Cursor implementó 'CheckConstraints' para los rangos sin pedírselo, aún así, me parece una decisión técnica acorde, sobre todo con los casos 'borde' 
 
@@ -136,7 +136,7 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 > una base de datos local para confirmar que el DDL generado es correcto (constraints
 > incluidos), antes de que cerremos esta feature.
 
-**Resultado:** Se inicializó Alembic (`alembic init`), configurando `env.py` para leer `Base.metadata` de los modelos y la URL de conexión desde `app.core.config.Settings` (sin credenciales en `alembic.ini`). Se generó la migración inicial con `--autogenerate` y se aplicó contra una base `evm_tracker` en el Postgres local. Verifiqué el DDL real en la base (no solo el archivo de migración): tablas, columnas, los 4 `CheckConstraint` y la `ForeignKey` con `ON DELETE CASCADE` quedaron exactamente como en los modelos. Además probé funcionalmente: inserción válida, rechazo de `bac` negativo por el `CheckConstraint`, borrado en cascada de actividades al borrar el proyecto, y un ciclo `downgrade`/`upgrade` completo sin errores.
+**Resultado:** Inicialicé Alembic (`alembic init`), configurando `env.py` para leer `Base.metadata` de los modelos y la URL de conexión desde `app.core.config.Settings` (sin credenciales en `alembic.ini`). Generé la migración inicial con `--autogenerate` y la apliqué contra una base `evm_tracker` en el Postgres local. Verifiqué el DDL real en la base (no solo el archivo de migración): tablas, columnas, los 4 `CheckConstraint` y la `ForeignKey` con `ON DELETE CASCADE` quedaron exactamente como en los modelos. Además probé funcionalmente: inserción válida, rechazo de `bac` negativo por el `CheckConstraint`, borrado en cascada de actividades al borrar el proyecto, y un ciclo `downgrade`/`upgrade` completo sin errores.
 
 ---
 
@@ -173,7 +173,7 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 > Antes de escribir implementación: confirma que entiendes el contrato completo y
 > empecemos con test_calculator.py, un test en rojo a la vez.
 
-**Resultado:** Se cerró el contrato del módulo EVM: `calculator.py` retorna `Decimal | None` de forma uniforme para ambas indeterminaciones (0/0 y positivo/0 devuelven el mismo `None`); la distinción semántica entre "sin datos" y "costo no registrado" vive únicamente en `interpreter.py`, que por tanto necesita recibir también los valores crudos (no solo el índice ya calculado) para poder redactar el mensaje correcto. Ajusté la lista de test cases de `interpreter.py` para reflejar esto y empecé el ciclo TDD por `test_calculator.py`, un test en rojo a la vez.
+**Resultado:** Cerré el contrato del módulo EVM: `calculator.py` retorna `Decimal | None` de forma uniforme para ambas indeterminaciones (0/0 y positivo/0 devuelven el mismo `None`); la distinción semántica entre "sin datos" y "costo no registrado" vive únicamente en `interpreter.py`, que por tanto necesita recibir también los valores crudos (no solo el índice ya calculado) para poder redactar el mensaje correcto. Ajusté la lista de test cases de `interpreter.py` para reflejar esto y empecé el ciclo TDD por `test_calculator.py`, un test en rojo a la vez.
 
 ---
 
@@ -320,7 +320,7 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 
 **Nota:** Este prompt fue refinado con ayuda de Claude Code, a partir de la respuesta de Cursor a la implementación de `interpret_spi`.
 
-**Resultado:** Propuse `calculate_activity_indicators(bac, planned_progress, actual_progress, ac) -> ActivityIndicators` (NamedTuple con las 8 métricas + `cpi_interpretation`/`spi_interpretation`). Para el consolidado, propuse `calculate_project_consolidated(activities: list[ActivityInput]) -> ProjectConsolidatedIndicators`, que recibe los datos **crudos** de cada actividad (no los `ActivityIndicators` ya calculados) y sube ella misma `total_bac`/`total_pv`/`total_ev`/`total_ac` usando `calculate_pv`/`calculate_ev` directamente — nunca llama a `calculate_cpi`/`calculate_spi` por actividad, solo una vez sobre los totales. Confirmé que esto satisface el punto 3 por construcción: la función ni siquiera tiene acceso a un CPI/SPI individual, así que promediarlos no es solo una mala práctica evitada por disciplina, sino una operación imposible dado el tipo de dato que recibe.
+**Resultado:** Cursor propuso `calculate_activity_indicators(bac, planned_progress, actual_progress, ac) -> ActivityIndicators` (NamedTuple con las 8 métricas + `cpi_interpretation`/`spi_interpretation`). Para el consolidado, Cursor propuso `calculate_project_consolidated(activities: list[ActivityInput]) -> ProjectConsolidatedIndicators`, que recibe los datos **crudos** de cada actividad (no los `ActivityIndicators` ya calculados) y sube ella misma `total_bac`/`total_pv`/`total_ev`/`total_ac` usando `calculate_pv`/`calculate_ev` directamente — nunca llama a `calculate_cpi`/`calculate_spi` por actividad, solo una vez sobre los totales. Confirmé que esto satisface el punto 3 por construcción: la función ni siquiera tiene acceso a un CPI/SPI individual, así que promediarlos no es solo una mala práctica evitada por disciplina, sino una operación imposible dado el tipo de dato que recibe.
 
 ---
 
@@ -377,6 +377,33 @@ aplicación.
 
 ---
 
+### Decisión 3: Uso de librería CSS para el frontend
+
+**La IA (Claude) propuso:** evitar librerías de UI por completo (Angular Material,
+PrimeNG) y usar CSS simple escrito a mano, argumentando que el tiempo de
+configuración no se justificaba para un proyecto de un día.
+
+**Yo cuestioné con este prompt:**
+
+> Por qué no usar librerías? es algo más sano que puro css, las librerías aportan
+> diseño sin estructurar de 0
+
+**Resultado:** no fue un simple "rechacé la sugerencia" , al cuestionarla, la IA
+reconsideró y ajustó su propia recomendación. Reconoció que una librería sí aporta
+consistencia visual (espaciados, colores, componentes) sin que cada componente
+termine con un estilo ligeramente distinto por haberlo escrito en momentos
+diferentes — algo que CSS puro no garantiza. En vez de mantener su postura
+original o irse al otro extremo (Angular Material completo, con curva de
+personalización alta), propuso un punto intermedio: Tailwind CSS, que da
+consistencia mediante utilidades sin la sobrecarga de una librería de componentes
+pesada. Opté por Tailwind, ya que lo he trabajado y me parece perfecto.
+
+Este intercambio es un buen ejemplo de usar la IA para pensar mejor: no acepté
+la primera sugerencia a ciegas, la cuestioné con un argumento concreto, y el
+resultado fue una decisión mejor que la posición inicial de cualquiera de los dos.
+
+---
+
 ### 28. Confirmación de schemas finales y avance a repositories/
 
 > Confirmado con el punto 1: mantén la validación duplicada (Field en el schema +
@@ -391,7 +418,7 @@ aplicación.
 >
 > Procede con repositories/.
 
-**Resultado:** Quedaron confirmados los schemas finales de `app/schemas/activity.py` (`ActivityCreate`, `ActivityUpdate`, `ActivityRead`, `ActivityIndicatorsSchema`, `ActivityWithIndicators`) y `app/schemas/project.py` (`ProjectCreate`, `ProjectUpdate`, `ProjectRead`, `ProjectConsolidatedIndicatorsSchema`, `ProjectDetail`), incorporando las decisiones 1 y 2 de la sección anterior (schemas separados, sin created_at/updated_at) más validación con `Field` (`gt`/`ge`/`le`) espejando los `CheckConstraint` de `Activity`, y `ConfigDict(from_attributes=True)` solo en los schemas que se construyen directo desde modelos SQLAlchemy. Con esto confirmado, se pasa a implementar `app/repositories/` (acceso a datos puro, sin lógica de negocio).
+**Resultado:** Confirmé los schemas finales de `app/schemas/activity.py` (`ActivityCreate`, `ActivityUpdate`, `ActivityRead`, `ActivityIndicatorsSchema`, `ActivityWithIndicators`) y `app/schemas/project.py` (`ProjectCreate`, `ProjectUpdate`, `ProjectRead`, `ProjectConsolidatedIndicatorsSchema`, `ProjectDetail`), incorporando las decisiones 1 y 2 de la sección anterior (schemas separados, sin created_at/updated_at) más validación con `Field` (`gt`/`ge`/`le`) espejando los `CheckConstraint` de `Activity`, y `ConfigDict(from_attributes=True)` solo en los schemas que se construyen directo desde modelos SQLAlchemy. Con esto confirmado, pasé a implementar `app/repositories/` (acceso a datos puro, sin lógica de negocio).
 
 ---
 
@@ -431,7 +458,7 @@ Implementé:
 > que entra al router hasta la respuesta final, para validar que la separación de
 > responsabilidades sea la que buscamos.
 
-**Resultado:** Propuse el flujo completo: `router` → `project_repository.get_by_id` (404 solo aquí, si es `None`) → `activity_repository.list_by_project` → por cada `Activity`, `indicators.calculate_activity_indicators` (service) + `ActivityIndicatorsSchema.from_domain` (mapeo a schema) → `ActivityWithIndicators` → en paralelo, lista de `ActivityInput` crudos (independiente de los indicadores ya calculados) → `indicators.calculate_project_consolidated` → `ProjectConsolidatedIndicatorsSchema.from_domain` → `ProjectDetail`. Propuse que la traducción de los `NamedTuple` del service (`ActivityIndicators`/`ProjectConsolidatedIndicators`, con `cpi_interpretation`/`spi_interpretation` anidados) a los schemas planos de la API viva como `classmethod from_domain(...)` en cada schema — ni el service conoce Pydantic, ni el router tiene mapeo campo-por-campo disperso inline.
+**Resultado:** Cursor propuso el flujo completo: `router` → `project_repository.get_by_id` (404 solo aquí, si es `None`) → `activity_repository.list_by_project` → por cada `Activity`, `indicators.calculate_activity_indicators` (service) + `ActivityIndicatorsSchema.from_domain` (mapeo a schema) → `ActivityWithIndicators` → en paralelo, lista de `ActivityInput` crudos (independiente de los indicadores ya calculados) → `indicators.calculate_project_consolidated` → `ProjectConsolidatedIndicatorsSchema.from_domain` → `ProjectDetail`. Cursor propuso que la traducción de los `NamedTuple` del service (`ActivityIndicators`/`ProjectConsolidatedIndicators`, con `cpi_interpretation`/`spi_interpretation` anidados) a los schemas planos de la API viva como `classmethod from_domain(...)` en cada schema — ni el service conoce Pydantic, ni el router tiene mapeo campo-por-campo disperso inline.
 
 **Nota:** Este prompt fue refinado con ayuda de Claude Code
 
@@ -555,7 +582,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 >
 > Agrega el prompt
 
-**Resultado:** Propuse 2 opciones de árbol Angular (A: por features / B: por capas) con componentes vacíos alineados al dashboard EVM (tabla, consolidado, semáforo, gráfica, formulario). Quedó pendiente de confirmación antes de generar archivos.
+**Resultado:** Cursor propuso 2 opciones de árbol Angular (A: por features / B: por capas) con componentes vacíos alineados al dashboard EVM (tabla, consolidado, semáforo, gráfica, formulario). Quedó pendiente de confirmación antes de generar archivos.
 
 ---
 
@@ -563,7 +590,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 
 > Vamos con la opción A, acá no hay relevancia en manejar una estructura híbrida.
 
-**Resultado:** Se generó el esqueleto Angular 19 en `frontend/` con la estructura por features (Opción A): `core/` (services + api.config), `shared/components/status-badge`, `features/projects` (project-list, project-dashboard), `features/activities` (activity-table, activity-form, consolidated-panel, evm-chart), y `models/` vacíos. Componentes sin lógica; build de desarrollo OK. Se descartó híbrido por ser innecesario en este alcance.
+**Resultado:** Generé el esqueleto Angular 19 en `frontend/` con la estructura por features (Opción A): `core/` (services + api.config), `shared/components/status-badge`, `features/projects` (project-list, project-dashboard), `features/activities` (activity-table, activity-form, consolidated-panel, evm-chart), y `models/` vacíos. Componentes sin lógica; build de desarrollo OK. Descarté el híbrido por ser innecesario en este alcance.
 
 ---
 
@@ -571,7 +598,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 
 > Antes de seguir, project-dashboard es mejor dejarlo en features/projects/ o dejarlo en una carpeta separada tipo features/dashboard, ya que en teoría junta cosas de projects y activities
 
-**Resultado:** Recomendé moverlo a `features/dashboard/`: no es un subdetalle de projects, sino la pantalla contenedora que orquesta projects + activities + consolidado + gráfica. Quedó pendiente de confirmación.
+**Resultado:** Cursor recomendó moverlo a `features/dashboard/`: no es un subdetalle de projects, sino la pantalla contenedora que orquesta projects + activities + consolidado + gráfica. Quedó pendiente de confirmación.
 
 ---
 
@@ -579,7 +606,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 
 > Dale, múevelo y registrar esa interacción y esta también
 
-**Resultado:** Se movió `project-dashboard` de `features/projects/` a `features/dashboard/project-dashboard/`. `features/projects/` queda solo con `project-list`. Sin cambios de imports (aún no había rutas ni referencias).
+**Resultado:** Moví `project-dashboard` de `features/projects/` a `features/dashboard/project-dashboard/`. `features/projects/` queda solo con `project-list`. Sin cambios de imports (aún no había rutas ni referencias).
 
 ---
 
@@ -587,7 +614,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 
 > Good, ahora quisiera empezar con las interfaces, services, de por sí toda la integración con el backend, cómo podemos abordarlo?
 
-**Resultado:** Propuse un plan por capas (CORS → models → HttpClient → services → smoke test → UI), con `ProjectService` dueño del `POST /projects/{id}/activities`. Dejé abiertas 2 decisiones: tipo de Decimals en TS (string vs number) y estilo HTTP (Observable vs async/await).
+**Resultado:** Cursor propuso un plan por capas (CORS → models → HttpClient → services → smoke test → UI), con `ProjectService` dueño del `POST /projects/{id}/activities`. Dejé abiertas 2 decisiones: tipo de Decimals en TS (string vs number) y estilo HTTP (Observable vs async/await).
 
 ---
 
@@ -598,7 +625,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 >
 > Lo veo correcto, registra los prompts
 
-**Resultado:** Se cerró el contrato de integración: campos `Decimal` del API como `string` en TypeScript (opción A) y HTTP con `Observable` (opción A). Se procede a implementar CORS + models + services.
+**Resultado:** Cerré el contrato de integración: campos `Decimal` del API como `string` en TypeScript (opción A) y HTTP con `Observable` (opción A). Procedí a implementar CORS + models + services.
 
 ---
 
@@ -610,7 +637,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 > en app.component.ts de forma temporal) que llame a projectService.list()
 > al arrancar la app, y me confirmes en consola que llegan datos reales
 
-**Resultado:** Se agregó un `ngOnInit` temporal en `app.component.ts` que llama a `projectService.list()`. Se amplió CORS a `http://127.0.0.1:4200` además de `localhost` (el smoke falló primero por ese mismatch). Verificado en consola del navegador: `200` con `[{"id":72,"name":"PROYECTO ACTUALIZADO"}]`.
+**Resultado:** Agregué un `ngOnInit` temporal en `app.component.ts` que llama a `projectService.list()`. Amplié CORS a `http://127.0.0.1:4200` además de `localhost` (el smoke falló primero por ese mismatch). Verificado en consola del navegador: `200` con `[{"id":72,"name":"PROYECTO ACTUALIZADO"}]`.
 
 ---
 
@@ -619,7 +646,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 > Confirmado, ya vi el log en consola con el proyecto real. Registra el prompt.
 > Ahora quita el smoke test temporal de app.component.ts.
 
-**Resultado:** Se registró la interacción del smoke test y se revirtió `app.component.ts` al shell limpio (solo `RouterOutlet`, sin `ProjectService` ni `console.log`).
+**Resultado:** Registré la interacción del smoke test y revertí `app.component.ts` al shell limpio (solo `RouterOutlet`, sin `ProjectService` ni `console.log`).
 
 ---
 
@@ -627,34 +654,7 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 
 > Con esto ya podríamos empezar con project-list, debido a que el brief no exige un diseño elaborado, opta por un diseño simple, que se entienda y sea "friendly" en cuestión de usabilidad. Registra el prompt
 
-**Resultado:** Se implementó `project-list` con listado, creación y navegación al dashboard; diseño simple orientado a usabilidad (sin estética elaborada). Rutas básicas cableadas.
-
----
-
-### Decisión 3: Uso de librería CSS para el frontend
-
-**La IA (Claude) propuso:** evitar librerías de UI por completo (Angular Material,
-PrimeNG) y usar CSS simple escrito a mano, argumentando que el tiempo de
-configuración no se justificaba para un proyecto de un día.
-
-**Yo cuestioné con este prompt:**
-
-> Por qué no usar librerías? es algo más sano que puro css, las librerías aportan
-> diseño sin estructurar de 0
-
-**Resultado:** no fue un simple "rechacé la sugerencia" , al cuestionarla, la IA
-reconsideró y ajustó su propia recomendación. Reconoció que una librería sí aporta
-consistencia visual (espaciados, colores, componentes) sin que cada componente
-termine con un estilo ligeramente distinto por haberlo escrito en momentos
-diferentes — algo que CSS puro no garantiza. En vez de mantener su postura
-original o irse al otro extremo (Angular Material completo, con curva de
-personalización alta), propuso un punto intermedio: Tailwind CSS, que da
-consistencia mediante utilidades sin la sobrecarga de una librería de componentes
-pesada. Opté por Tailwind, ya que lo he trabajado y me parece perfecto.
-
-Este intercambio es un buen ejemplo de usar la IA para pensar mejor: no acepté
-la primera sugerencia a ciegas, la cuestioné con un argumento concreto, y el
-resultado fue una decisión mejor que la posición inicial de cualquiera de los dos.
+**Resultado:** Implementé `project-list` con listado, creación y navegación al dashboard; diseño simple orientado a usabilidad (sin estética elaborada). Rutas básicas cableadas.
 
 ---
 
@@ -677,7 +677,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 >
 > Aplícalo con CSS simple en el componente, nada de dependencias nuevas.
 
-**Resultado:** `ng add tailwindcss` no aplica schematics en v4; se usó el setup manual oficial (`tailwindcss` + `@tailwindcss/postcss` + `postcss`, `.postcssrc.json`, `@import "tailwindcss"`). Se reestilizó `project-list` solo con utilidades Tailwind (tarjetas, hover, Crear/Eliminar, gaps). Build limpio.
+**Resultado:** `ng add tailwindcss` no aplica schematics en v4; usé el setup manual oficial (`tailwindcss` + `@tailwindcss/postcss` + `postcss`, `.postcssrc.json`, `@import "tailwindcss"`). Reestilicé `project-list` solo con utilidades Tailwind (tarjetas, hover, Crear/Eliminar, gaps). Build limpio.
 
 ---
 
@@ -693,7 +693,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 
 > Siento que la opción A es mucho mejor, la idea es separar las ideas visuales sin necesidad de complejizar todo el front. Registra los prompts
 
-**Resultado:** Se reorganizó `project-list` en dos zonas claras en la misma ruta: (1) lista/abrir como flujo principal, (2) bloque inferior “Crear proyecto” separado visualmente. Sin rutas nuevas.
+**Resultado:** Reorganicé `project-list` en dos zonas claras en la misma ruta: (1) lista/abrir como flujo principal, (2) bloque inferior “Crear proyecto” separado visualmente. Sin rutas nuevas.
 
 ---
 
@@ -701,7 +701,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 
 > Mejor, ahora para el project-dashboard, siguiendo los lineamientos que hemos trabajado, cómo propones la construcción?
 
-**Resultado:** Propuse dashboard como orquestador (carga `ProjectDetail`, inputs/outputs, refresh tras mutaciones), zonas visuales (consolidado → gráfica → tabla → formulario), y orden de construcción. Dejé abiertas: librería de gráfica y si el formulario es siempre visible o colapsable.
+**Resultado:** Cursor propuso dashboard como orquestador (carga `ProjectDetail`, inputs/outputs, refresh tras mutaciones), zonas visuales (consolidado → gráfica → tabla → formulario), y orden de construcción. Dejé abiertas: librería de gráfica y si el formulario es siempre visible o colapsable.
 
 ---
 
@@ -712,7 +712,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 >
 > Registra los prompts
 
-**Resultado:** Se cerró: gráfica con Chart.js; formulario de actividad colapsable (opción B). Se arranca por shell del dashboard + `status-badge` + `consolidated-panel`.
+**Resultado:** Cerré: gráfica con Chart.js; formulario de actividad colapsable (opción B). Arranqué por shell del dashboard + `status-badge` + `consolidated-panel`.
 
 ---
 
@@ -720,7 +720,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 
 > Podemos seguir con activity-table
 
-**Resultado:** Se implementó `activity-table` (indicadores + semáforos + Editar/Eliminar) y se cableó al dashboard: eliminar confirma y refresca vía API; editar deja `activityToEdit` listo para el formulario.
+**Resultado:** Implementé `activity-table` (indicadores + semáforos + Editar/Eliminar) y lo cableé al dashboard: eliminar confirma y refresca vía API; editar deja `activityToEdit` listo para el formulario.
 
 ---
 
@@ -728,7 +728,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 
 > Agrega el prompt, Ahora procede con el activity-form
 
-**Resultado:** Se implementó `activity-form` colapsable (opción B): crear y editar actividad; el dashboard orquesta create/update + refresh de `ProjectDetail`.
+**Resultado:** Implementé `activity-form` colapsable (opción B): crear y editar actividad; el dashboard orquesta create/update + refresh de `ProjectDetail`.
 
 ---
 
@@ -736,7 +736,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 
 > Funciona muy bien. Podemos seguir con evm-chart, registra el prompt
 
-**Resultado:** Se implementó `evm-chart` con Chart.js (barras agrupadas PV / EV / AC por actividad) y se cableó en `project-dashboard`.
+**Resultado:** Implementé `evm-chart` con Chart.js (barras agrupadas PV / EV / AC por actividad) y lo cableé en `project-dashboard`.
 
 ---
 
@@ -756,7 +756,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 >
 > Agrega el prompt
 
-**Resultado:** Causa raíz identificada (sin fix aún): carrera entre el `commit` de `get_db()` (código después del `yield`, que en FastAPI ≥0.118 corre *después* de enviar la respuesta) y el `getById` inmediato del dashboard. El POST crea con `flush` pero otra sesión aún no ve el row hasta el commit; el GET puede devolver el proyecto sin la actividad nueva. Reproducido con httpx async (1/30 stale). No es un límite del listado ni un fallo de binding de eventos en Angular. Por eso es intermitente y aparece “a partir de varias” (más intentos ⇒ más probabilidad), no en el 100% de las altas.
+**Resultado:** Identifiqué la causa raíz (sin fix aún): carrera entre el `commit` de `get_db()` (código después del `yield`, que en FastAPI ≥0.118 corre *después* de enviar la respuesta) y el `getById` inmediato del dashboard. El POST crea con `flush` pero otra sesión aún no ve el row hasta el commit; el GET puede devolver el proyecto sin la actividad nueva. Reproducido con httpx async (1/30 stale). No es un límite del listado ni un fallo de binding de eventos en Angular. Por eso es intermitente y aparece “a partir de varias” (más intentos ⇒ más probabilidad), no en el 100% de las altas.
 
 ---
 
@@ -781,7 +781,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 
 **Nota:** Este prompt fue refinado con ayuda de Claude.
 
-**Resultado:** El commit post-respuesta no venía de SQLAlchemy ni de nuestra lógica de negocio: desde FastAPI ≥0.118, las dependencias con `yield` usan por defecto `scope="request"` y ejecutan el código tras el `yield` *después* de enviar la respuesta. Se preservó el patrón (commit solo en `get_db`, repositories con `flush`) exponiendo `DbSession = Annotated[Session, Depends(get_db, scope="function")]`, que hace el commit *antes* de responder. Prueba httpx async 30× create→GET: 0 stale. 66 tests en verde.
+**Resultado:** El commit post-respuesta no venía de SQLAlchemy ni de nuestra lógica de negocio: desde FastAPI ≥0.118, las dependencias con `yield` usan por defecto `scope="request"` y ejecutan el código tras el `yield` *después* de enviar la respuesta. Preservé el patrón (commit solo en `get_db`, repositories con `flush`) exponiendo `DbSession = Annotated[Session, Depends(get_db, scope="function")]`, que hace el commit *antes* de responder. Prueba httpx async 30× create→GET: 0 stale. 66 tests en verde.
 
 ---
 
@@ -789,7 +789,7 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 
 > Me di cuenta que con todas estas pruebas recorridas, la gráfica se amontona demasiado y se hace ilegible, crees que sea conveniente revisar una solución?
 
-**Resultado:** Propuse opciones (ventana N, scroll, resumen, paginación). Recomendé híbrido A+C: ≤N todas; >N top por criterio + mensaje.
+**Resultado:** Cursor propuso opciones (ventana N, scroll, resumen, paginación). Cursor recomendó híbrido A+C: ≤N todas; >N top por criterio + mensaje.
 
 ---
 
@@ -808,6 +808,59 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 > mensaje "mostrando N de M", y aclara que la tabla y el consolidado siguen
 > mostrando el total completo.
 
-**Resultado:** Se implementó en `evm-chart`: umbral 10; si hay más, top 10 por `|CV|` con mensaje "Mostrando N de M (mayor |CV|). La tabla y el consolidado muestran el proyecto completo."
+**Resultado:** Implementé en `evm-chart`: umbral 10; si hay más, top 10 por `|CV|` con mensaje "Mostrando N de M (mayor |CV|). La tabla y el consolidado muestran el proyecto completo."
+
+---
+
+## Reflexión final
+
+Lo que más me costó fue la curva de aprendizaje de EVM. Más que memorizar las
+fórmulas, fue entender cuándo usar cada una, qué significa cada indicador,
+resolver ejercicios reales y comprender los edge cases antes de empezar a
+programar. También me tomó un tiempo organizar mis ideas para estructurar el
+proyecto de acuerdo con lo que pedía el brief, especialmente en la parte de
+`AI_PROCESS.md` y cómo documentar todo el proceso.
+
+Si volviera a hacerlo, haría commits con mucha más frecuencia. En varias
+ocasiones desarrollé features importantes sin registrarlas inmediatamente en
+Git, y después tuve que reconstruir el historial. También me hubiera gustado
+usar OpenSpec para organizar mejor las especificaciones, pero como el desafío
+pedía documentar los prompts utilizados, preferí no incorporarlo para mantener
+ese flujo de trabajo.
+
+Me hubiera gustado dedicarle más tiempo a la parte visual del frontend para
+hacerla un poco más interactiva. Sin embargo, durante el desarrollo también
+tenía responsabilidades con un cliente, así que tuve que priorizar el tiempo y
+enfocarme primero en la funcionalidad.
+
+Lo que más disfruté fue ver la gráfica actualizarse cada vez que creaba una
+actividad y comprobar que los resultados coincidían con los cálculos que había
+validado previamente. En general, disfruté mucho el proceso: aprender un dominio
+nuevo, construir la solución paso a paso y ver cómo todo iba tomando forma fue
+lo más satisfactorio del desafío.
+
+---
+
+## Decisión de arquitectura independiente
+
+Al diseñar `calculate_project_consolidated`, definí una restricción de
+arquitectura antes de implementar la función: debía recibir únicamente los
+datos base de cada actividad (`BAC`, avance planificado, avance real y `AC`),
+nunca indicadores ya calculados como `CPI` o `SPI`.
+
+Tomé esta decisión porque uno de los errores conceptuales más comunes en EVM es
+calcular el consolidado promediando los índices individuales. Después de
+estudiar el dominio y resolver varios ejercicios, preferí evitar que ese error
+fuera posible desde el diseño de la función. Si los indicadores individuales no
+forman parte de la entrada, no existe la posibilidad de utilizarlos por
+accidente en un refactor o una modificación futura.
+
+Esta restricción la establecí antes de pedirle a la IA que propusiera la firma
+de la función (ver entrada 25) y luego confirmé que el diseño la respetara.
+Como validación, utilicé el caso de prueba **"mixed AC zero"**, donde una
+actividad tiene `AC = 0` (por lo que su `CPI` individual es `None`) mientras las
+demás sí tienen costo. El resultado confirmó que el `CPI` consolidado se calcula
+a partir de los valores agregados del proyecto y no de los indicadores
+individuales de cada actividad.
 
 ---
