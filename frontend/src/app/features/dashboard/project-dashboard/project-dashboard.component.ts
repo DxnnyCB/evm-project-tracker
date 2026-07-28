@@ -13,6 +13,8 @@ import { ConsolidatedPanelComponent } from '../../activities/consolidated-panel/
 import { EvmChartComponent } from '../../activities/evm-chart/evm-chart.component';
 import { ActivityWithIndicators } from '../../../models/activity.model';
 import { ProjectDetail } from '../../../models/project.model';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ToastService } from '../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-project-dashboard',
@@ -22,6 +24,7 @@ import { ProjectDetail } from '../../../models/project.model';
     ActivityTableComponent,
     ActivityFormComponent,
     EvmChartComponent,
+    ConfirmDialogComponent,
   ],
   templateUrl: './project-dashboard.component.html',
   styleUrl: './project-dashboard.component.css',
@@ -32,6 +35,7 @@ export class ProjectDashboardComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly projectService = inject(ProjectService);
   private readonly activityService = inject(ActivityService);
+  private readonly toast = inject(ToastService);
 
   project: ProjectDetail | null = null;
   activityToEdit: ActivityWithIndicators | null = null;
@@ -39,6 +43,11 @@ export class ProjectDashboardComponent implements OnInit {
   savingActivity = false;
   errorMessage: string | null = null;
   private projectId: number | null = null;
+
+  confirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  private pendingDelete: ActivityWithIndicators | null = null;
 
   ngOnInit(): void {
     const rawId = this.route.snapshot.paramMap.get('projectId');
@@ -83,11 +92,12 @@ export class ProjectDashboardComponent implements OnInit {
 
     this.savingActivity = true;
     this.errorMessage = null;
+    const isCreate = event.activityId === null;
 
     const request$ =
-      event.activityId === null
+      isCreate
         ? this.projectService.createActivity(this.projectId, event.data)
-        : this.activityService.update(event.activityId, event.data);
+        : this.activityService.update(event.activityId!, event.data);
 
     request$.subscribe({
       next: () => {
@@ -95,24 +105,35 @@ export class ProjectDashboardComponent implements OnInit {
         this.activityToEdit = null;
         this.activityForm?.close();
         this.loadProject(this.projectId!);
+        this.toast.success(
+          isCreate ? 'Actividad creada.' : 'Actividad actualizada.',
+        );
       },
       error: (err: HttpErrorResponse) => {
         this.savingActivity = false;
-        this.errorMessage = this.describeMutationError(
+        const message = this.describeMutationError(
           err,
-          event.activityId === null
+          isCreate
             ? 'No se pudo crear la actividad.'
             : 'No se pudo actualizar la actividad.',
         );
+        this.errorMessage = message;
+        this.toast.error(message);
       },
     });
   }
 
   onRemoveActivity(activity: ActivityWithIndicators): void {
-    const confirmed = window.confirm(
-      `¿Eliminar la actividad "${activity.name}"?`,
-    );
-    if (!confirmed || this.projectId === null) {
+    this.pendingDelete = activity;
+    this.confirmTitle = 'Eliminar actividad';
+    this.confirmMessage = `¿Eliminar la actividad "${activity.name}"?`;
+    this.confirmOpen = true;
+  }
+
+  onConfirmDelete(): void {
+    const activity = this.pendingDelete;
+    this.closeConfirm();
+    if (!activity || this.projectId === null) {
       return;
     }
 
@@ -123,14 +144,28 @@ export class ProjectDashboardComponent implements OnInit {
           this.activityForm?.close();
         }
         this.loadProject(this.projectId!);
+        this.toast.success(`Actividad "${activity.name}" eliminada.`);
       },
       error: (err: HttpErrorResponse) => {
-        this.errorMessage = this.describeMutationError(
+        const message = this.describeMutationError(
           err,
           'No se pudo eliminar la actividad.',
         );
+        this.errorMessage = message;
+        this.toast.error(message);
       },
     });
+  }
+
+  onCancelDelete(): void {
+    this.closeConfirm();
+  }
+
+  private closeConfirm(): void {
+    this.confirmOpen = false;
+    this.pendingDelete = null;
+    this.confirmTitle = '';
+    this.confirmMessage = '';
   }
 
   private describeError(err: HttpErrorResponse): string {

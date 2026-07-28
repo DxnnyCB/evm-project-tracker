@@ -116,3 +116,14 @@
     </form>
   </section>
 </section>
+
+<app-confirm-dialog
+  [open]="confirmOpen"
+  [title]="confirmTitle"
+  [message]="confirmMessage"
+  confirmLabel="Eliminar"
+  cancelLabel="Cancelar"
+  tone="danger"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onCancelDelete()"
+/>
