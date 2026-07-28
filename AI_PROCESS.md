@@ -2,7 +2,7 @@
 
 ## Herramientas de IA utilizadas
 
-## Herramientas de IA utilizadas
+
 
 - **Cursor** (asistente principal de código): tengo suscripción activa, lo que me da acceso a modelos como Claude Opus, Sonnet y Fable directamente en el editor. Esto me permite iterar rápido sobre el código sin salir del flujo de trabajo.
 - **Claude** (investigación conceptual): lo usé por fuera de Cursor para entender EVM a fondo antes de programar — explicaciones del concepto, validación de fórmulas con ejercicios prácticos, y resolución de dudas sobre casos borde matemáticos, antes de traducir ese entendimiento a código.
@@ -334,6 +334,51 @@ Recibí retroalimentación punto por punto en cada ejercicio antes de dar el con
 2. `ActivityInput` + `ProjectConsolidatedIndicators` + `calculate_project_consolidated`: 4 tests, incluyendo el caso crítico "mixed AC zero" (una actividad con `AC=0`, cuyo CPI individual sería `None`, mezclada con otra que sí tiene costo) — confirmé que el CPI consolidado (`1.0`) se deriva correctamente de `total_ac > 0`, nunca de los índices individuales.
 
 Cierre del módulo `app/services/evm/`: **38/38 tests en verde, 100% de cobertura** en `calculator.py`, `enums.py`, `interpreter.py` e `indicators.py` — muy por encima del gate mínimo del 80% exigido en `pyproject.toml`. Todos los edge cases explícitos del brief (AC=0, avance real=0, sin actividades, consolidado sumando antes de derivar) quedaron cubiertos con pruebas.
+
+## Cómo verifiqué que los cálculos son correctos
+
+No me limité a que la suite de pruebas pasara. Durante el desarrollo validé los
+resultados de distintas formas para asegurarme de que la lógica implementada
+coincidiera con el comportamiento esperado.
+
+**Antes de implementar la lógica EVM**, resolví tres ejercicios manuales (ver
+entradas 1-3): cálculo de los ocho indicadores, el caso de indeterminación
+`0/0` y el consolidado de un proyecto con tres actividades. Esto me permitió
+entender el dominio y confirmar que el `CPI` y `SPI` consolidados deben
+calcularse a partir de la suma de `PV`, `EV` y `AC`, no promediando los índices
+individuales.
+
+**Durante la implementación de `calculate_activity_indicators`** (entrada 26),
+calculé manualmente los resultados esperados para un caso de prueba
+(`BAC=8.000.000`, avance planificado `60%`, avance real `70%` y
+`AC=6.000.000`) antes de escribir los `assert` de los tests. Luego confirmé que
+los valores generados por el código coincidían exactamente con esos cálculos.
+
+**Al implementar `calculate_project_consolidated`** (entrada 26), validé el
+caso **"mixed AC zero"**, donde una actividad tiene `AC = 0` y otra sí registra
+costos. El objetivo era confirmar que el `CPI` consolidado se calcula a partir
+de los totales del proyecto y no utilizando los indicadores individuales de las
+actividades.
+
+**Sobre PostgreSQL**, verifiqué manualmente el comportamiento de los
+`CheckConstraint` y `ON DELETE CASCADE` (entradas 11-12), realizando
+inserciones y eliminaciones reales para comprobar tanto las restricciones como
+la eliminación en cascada.
+
+**Finalmente, probando la API en ejecución** (entradas 35 y 54), encontré dos
+problemas que la suite automatizada no detectó por sí sola:
+
+- El problema de redondeo, donde algunos indicadores se devolvían con hasta 28
+  decimales en la respuesta JSON.
+- Una condición de carrera durante la creación de actividades, que reproduje
+  mediante 30 solicitudes concurrentes con `httpx`. Antes del cambio aparecía
+  aproximadamente un resultado inconsistente por cada 30 ejecuciones; después
+  del ajuste, el problema dejó de reproducirse.
+
+En todos estos casos busqué validar el comportamiento real de la aplicación,
+contrastando los resultados con cálculos manuales, pruebas controladas y
+ejecuciones sobre la base de datos y la API, en lugar de depender únicamente de
+que los tests automatizados pasaran correctamente.
 
 ## 27. Decisiones donde no seguí la recomendación de la IA
 
