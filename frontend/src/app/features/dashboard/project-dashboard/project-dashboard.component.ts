@@ -10,6 +10,7 @@ import {
 } from '../../activities/activity-form/activity-form.component';
 import { ActivityTableComponent } from '../../activities/activity-table/activity-table.component';
 import { ConsolidatedPanelComponent } from '../../activities/consolidated-panel/consolidated-panel.component';
+import { EvmChartComponent } from '../../activities/evm-chart/evm-chart.component';
 import { ActivityWithIndicators } from '../../../models/activity.model';
 import { ProjectDetail } from '../../../models/project.model';
 
@@ -20,6 +21,7 @@ import { ProjectDetail } from '../../../models/project.model';
     ConsolidatedPanelComponent,
     ActivityTableComponent,
     ActivityFormComponent,
+    EvmChartComponent,
   ],
   templateUrl: './project-dashboard.component.html',
   styleUrl: './project-dashboard.component.css',

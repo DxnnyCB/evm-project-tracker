@@ -35,16 +35,12 @@
       <app-consolidated-panel [consolidated]="project.consolidated" />
     </div>
 
-    <!-- Zona 2: gráfica (pendiente Chart.js) -->
+    <!-- Zona 2: gráfica PV / EV / AC -->
     <section class="mb-10" aria-labelledby="chart-heading">
       <h2 id="chart-heading" class="m-0 mb-3 text-lg font-semibold text-slate-800">
         Comparación PV / EV / AC
       </h2>
-      <div
-        class="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500"
-      >
-        Gráfica pendiente — se cableará con Chart.js.
-      </div>
+      <app-evm-chart [activities]="project.activities" />
     </section>
 
     <hr class="mb-10 border-0 border-t border-slate-300" />
