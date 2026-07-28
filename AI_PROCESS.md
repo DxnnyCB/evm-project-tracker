@@ -784,3 +784,30 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** El commit post-respuesta no venía de SQLAlchemy ni de nuestra lógica de negocio: desde FastAPI ≥0.118, las dependencias con `yield` usan por defecto `scope="request"` y ejecutan el código tras el `yield` *después* de enviar la respuesta. Se preservó el patrón (commit solo en `get_db`, repositories con `flush`) exponiendo `DbSession = Annotated[Session, Depends(get_db, scope="function")]`, que hace el commit *antes* de responder. Prueba httpx async 30× create→GET: 0 stale. 66 tests en verde.
 
 ---
+
+### 56. Gráfica ilegible con muchas actividades — ¿revisar solución?
+
+> Me di cuenta que con todas estas pruebas recorridas, la gráfica se amontona demasiado y se hace ilegible, crees que sea conveniente revisar una solución?
+
+**Resultado:** Propuse opciones (ventana N, scroll, resumen, paginación). Recomendé híbrido A+C: ≤N todas; >N top por criterio + mensaje.
+
+---
+
+### 57. Confirmación híbrido gráfica: top 10 por |CV|
+
+> Sí, regístralo. Voy con el híbrido A+C, con un ajuste: el criterio de "top N"
+> debe ser por |CV| (desviación de costo en valor absoluto), no por BAC. El
+> propósito de la gráfica es ayudar a detectar problemas de un vistazo, y BAC
+> solo indica tamaño, no desviación — es el mismo criterio que ya usamos en el
+> ejercicio de aprendizaje para identificar la actividad "más desviada" de un
+> proyecto, así que mantiene coherencia con cómo interpretamos EVM en el resto
+> del proyecto.
+>
+> Umbral de 10 me parece bien, sin necesidad de ajustarlo. Implementa el
+> híbrido: <=10 actividades, todas visibles; >10, top 10 por |CV| con el
+> mensaje "mostrando N de M", y aclara que la tabla y el consolidado siguen
+> mostrando el total completo.
+
+**Resultado:** Se implementó en `evm-chart`: umbral 10; si hay más, top 10 por `|CV|` con mensaje "Mostrando N de M (mayor |CV|). La tabla y el consolidado muestran el proyecto completo."
+
+---
