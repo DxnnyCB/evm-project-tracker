@@ -8,7 +8,7 @@ Actualizar esta lista en cada PR para que el README de `main` siempre refleje el
 
 **Completado**
 
-- [x] Esqueleto del backend (capas, `pyproject.toml`, ruff, app mínima con Swagger en `/docs`)
+- [x] Esqueleto del backend (capas, `pyproject.toml`, ruff, app mínima con Swagger en `/api-docs`)
 - [x] Modelos SQLAlchemy (`Project`, `Activity`) con relación 1—N y `ON DELETE CASCADE`
 - [x] Constraints de validación en BD (`bac > 0`, `ac >= 0`, porcentajes 0–100)
 - [x] Alembic inicializado + migración inicial aplicada y verificada contra Postgres local
@@ -41,7 +41,7 @@ Organización por **capas técnicas**, con el cálculo EVM aislado en un subpaqu
 ```
 backend/
 ├── app/
-│   ├── main.py                 # FastAPI app + /health; Swagger en /docs
+│   ├── main.py                 # FastAPI app + /health; Swagger en /api-docs
 │   ├── core/
 │   │   ├── config.py           # Settings (pydantic-settings), lee .env
 │   │   └── database.py         # engine, SessionLocal, Base, get_db()
@@ -140,7 +140,7 @@ Una vez levantada, en cualquier sistema operativo:
 
 - API: http://127.0.0.1:8000
 - Health: http://127.0.0.1:8000/health → `{"status":"ok"}`
-- Swagger UI: http://127.0.0.1:8000/docs
+- Swagger UI: http://127.0.0.1:8000/api-docs
 
 ## Cómo correr el frontend
 

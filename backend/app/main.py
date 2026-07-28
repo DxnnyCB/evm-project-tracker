@@ -17,6 +17,7 @@ app = FastAPI(
         "de indicadores de Valor Ganado (EVM)."
     ),
     version="0.1.0",
+    docs_url="/api-docs",
 )
 
 app.add_middleware(
@@ -33,5 +34,5 @@ app.include_router(activities_router)
 
 @app.get("/health", tags=["health"])
 def health_check() -> dict[str, str]:
-    """Verifica que la API está viva. Swagger UI queda disponible en /docs."""
+    """Verifica que la API está viva. Swagger UI queda disponible en /api-docs."""
     return {"status": "ok"}
