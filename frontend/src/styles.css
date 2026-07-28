@@ -1,1 +1,11 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss" source("./app");
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply m-0 min-h-full bg-slate-200 font-sans text-base text-slate-900 antialiased;
+  }
+}
