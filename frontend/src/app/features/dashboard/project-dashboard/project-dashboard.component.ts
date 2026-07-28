@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ActivityService } from '../../../core/services/activity.service';
@@ -19,6 +20,7 @@ import { ToastService } from '../../../shared/services/toast.service';
 @Component({
   selector: 'app-project-dashboard',
   imports: [
+    FormsModule,
     RouterLink,
     ConsolidatedPanelComponent,
     ActivityTableComponent,
@@ -41,6 +43,9 @@ export class ProjectDashboardComponent implements OnInit {
   activityToEdit: ActivityWithIndicators | null = null;
   loading = false;
   savingActivity = false;
+  savingProjectName = false;
+  editingProjectName = false;
+  projectNameDraft = '';
   errorMessage: string | null = null;
   private projectId: number | null = null;
 
@@ -72,6 +77,55 @@ export class ProjectDashboardComponent implements OnInit {
         this.loading = false;
         this.project = null;
         this.errorMessage = this.describeError(err);
+      },
+    });
+  }
+
+  startEditProjectName(): void {
+    if (!this.project || this.savingProjectName) {
+      return;
+    }
+    this.projectNameDraft = this.project.name;
+    this.editingProjectName = true;
+  }
+
+  cancelEditProjectName(): void {
+    this.editingProjectName = false;
+    this.projectNameDraft = '';
+  }
+
+  saveProjectName(): void {
+    if (this.projectId === null || !this.project || this.savingProjectName) {
+      return;
+    }
+
+    const name = this.projectNameDraft.trim();
+    if (!name) {
+      this.toast.error('El nombre del proyecto no puede estar vacío.');
+      return;
+    }
+    if (name === this.project.name) {
+      this.cancelEditProjectName();
+      return;
+    }
+
+    this.savingProjectName = true;
+    this.projectService.update(this.projectId, { name }).subscribe({
+      next: (updated) => {
+        this.project = { ...this.project!, name: updated.name };
+        this.savingProjectName = false;
+        this.editingProjectName = false;
+        this.projectNameDraft = '';
+        this.toast.success('Nombre del proyecto actualizado.');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.savingProjectName = false;
+        const message = this.describeMutationError(
+          err,
+          'No se pudo actualizar el nombre del proyecto.',
+        );
+        this.errorMessage = message;
+        this.toast.error(message);
       },
     });
   }
