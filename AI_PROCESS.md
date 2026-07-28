@@ -696,3 +696,22 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Se reorganizó `project-list` en dos zonas claras en la misma ruta: (1) lista/abrir como flujo principal, (2) bloque inferior “Crear proyecto” separado visualmente. Sin rutas nuevas.
 
 ---
+
+### 49. Diseño de construcción de project-dashboard
+
+> Mejor, ahora para el project-dashboard, siguiendo los lineamientos que hemos trabajado, cómo propones la construcción?
+
+**Resultado:** Propuse dashboard como orquestador (carga `ProjectDetail`, inputs/outputs, refresh tras mutaciones), zonas visuales (consolidado → gráfica → tabla → formulario), y orden de construcción. Dejé abiertas: librería de gráfica y si el formulario es siempre visible o colapsable.
+
+---
+
+### 50. Confirmación dashboard: Chart.js + formulario colapsable
+
+> 1. Chart.js
+> 2. B
+>
+> Registra los prompts
+
+**Resultado:** Se cerró: gráfica con Chart.js; formulario de actividad colapsable (opción B). Se arranca por shell del dashboard + `status-badge` + `consolidated-panel`.
+
+---
