@@ -582,3 +582,117 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 **Resultado:** Se movió `project-dashboard` de `features/projects/` a `features/dashboard/project-dashboard/`. `features/projects/` queda solo con `project-list`. Sin cambios de imports (aún no había rutas ni referencias).
 
 ---
+
+### 41. Abordaje de la integración frontend ↔ backend
+
+> Good, ahora quisiera empezar con las interfaces, services, de por sí toda la integración con el backend, cómo podemos abordarlo?
+
+**Resultado:** Propuse un plan por capas (CORS → models → HttpClient → services → smoke test → UI), con `ProjectService` dueño del `POST /projects/{id}/activities`. Dejé abiertas 2 decisiones: tipo de Decimals en TS (string vs number) y estilo HTTP (Observable vs async/await).
+
+---
+
+### 42. Confirmación de decisiones de integración (string + Observable)
+
+> 1. Opción A
+> 2. Opción A
+>
+> Lo veo correcto, registra los prompts
+
+**Resultado:** Se cerró el contrato de integración: campos `Decimal` del API como `string` en TypeScript (opción A) y HTTP con `Observable` (opción A). Se procede a implementar CORS + models + services.
+
+---
+
+### 43. Smoke test temporal de ProjectService contra la API real
+
+> Antes de cablear la UI, quiero un smoke test rápido, algo simple y temporal,
+> que confirme que ProjectService realmente puede hablar con la API real
+> (no solo que compila). Un console.log desde algún punto (puede ser directo
+> en app.component.ts de forma temporal) que llame a projectService.list()
+> al arrancar la app, y me confirmes en consola que llegan datos reales
+
+**Resultado:** Se agregó un `ngOnInit` temporal en `app.component.ts` que llama a `projectService.list()`. Se amplió CORS a `http://127.0.0.1:4200` además de `localhost` (el smoke falló primero por ese mismatch). Verificado en consola del navegador: `200` con `[{"id":72,"name":"PROYECTO ACTUALIZADO"}]`.
+
+---
+
+### 44. Confirmación del smoke test y limpieza
+
+> Confirmado, ya vi el log en consola con el proyecto real. Registra el prompt.
+> Ahora quita el smoke test temporal de app.component.ts.
+
+**Resultado:** Se registró la interacción del smoke test y se revirtió `app.component.ts` al shell limpio (solo `RouterOutlet`, sin `ProjectService` ni `console.log`).
+
+---
+
+### 45. Implementación de project-list (UI simple)
+
+> Con esto ya podríamos empezar con project-list, debido a que el brief no exige un diseño elaborado, opta por un diseño simple, que se entienda y sea "friendly" en cuestión de usabilidad. Registra el prompt
+
+**Resultado:** Se implementó `project-list` con listado, creación y navegación al dashboard; diseño simple orientado a usabilidad (sin estética elaborada). Rutas básicas cableadas.
+
+---
+
+### Decisión 3: Uso de librería CSS para el frontend
+
+**La IA (Claude) propuso:** evitar librerías de UI por completo (Angular Material,
+PrimeNG) y usar CSS simple escrito a mano, argumentando que el tiempo de
+configuración no se justificaba para un proyecto de un día.
+
+**Yo cuestioné con este prompt:**
+
+> Por qué no usar librerías? es algo más sano que puro css, las librerías aportan
+> diseño sin estructurar de 0
+
+**Resultado:** no fue un simple "rechacé la sugerencia" , al cuestionarla, la IA
+reconsideró y ajustó su propia recomendación. Reconoció que una librería sí aporta
+consistencia visual (espaciados, colores, componentes) sin que cada componente
+termine con un estilo ligeramente distinto por haberlo escrito en momentos
+diferentes — algo que CSS puro no garantiza. En vez de mantener su postura
+original o irse al otro extremo (Angular Material completo, con curva de
+personalización alta), propuso un punto intermedio: Tailwind CSS, que da
+consistencia mediante utilidades sin la sobrecarga de una librería de componentes
+pesada. Opté por Tailwind, ya que lo he trabajado y me parece perfecto.
+
+Este intercambio es un buen ejemplo de usar la IA para pensar mejor: no acepté
+la primera sugerencia a ciegas, la cuestioné con un argumento concreto, y el
+resultado fue una decisión mejor que la posición inicial de cualquiera de los dos.
+
+---
+
+### 46. Instalar Tailwind CSS y restyle de project-list
+
+> Vamos a usar Tailwind CSS en el frontend, no CSS puro ni una librería de
+> componentes. Instálalo siguiendo la guía oficial para Angular standalone.
+>
+> Con Tailwind ya configurado, aplica esto a project-list:
+> - Las filas de proyecto como tarjetas con borde sutil y sombra leve.
+> - Hover visible en la fila clickeable (cambio de fondo + cursor pointer).
+> - Botón "Crear" con color de acción positiva, "Eliminar" con color de
+>   advertencia/peligro.
+> - Espaciado generoso entre título, formulario y lista.
+> - Input y botón del formulario separados, no pegados.
+>
+> Usa clases de utilidad de Tailwind, sin CSS custom salvo que algo no se pueda
+> resolver con utilidades.
+> - El input y botón del formulario con separación, no pegados.
+>
+> Aplícalo con CSS simple en el componente, nada de dependencias nuevas.
+
+**Resultado:** `ng add tailwindcss` no aplica schematics en v4; se usó el setup manual oficial (`tailwindcss` + `@tailwindcss/postcss` + `postcss`, `.postcssrc.json`, `@import "tailwindcss"`). Se reestilizó `project-list` solo con utilidades Tailwind (tarjetas, hover, Crear/Eliminar, gaps). Build limpio.
+
+---
+
+### 47. Feedback de UX: separar funcionalidades en project-list
+
+> Mejoró bastante el UI. Ahora hay algo que no me gusta del todo, si bien pedí algo básico, no me gusta la idea de mezclar todo en una vista sin una idea clara de separación de funcionalidades visuales y flow de trabajo
+
+**Resultado:** Propuse Opción A (misma ruta, dos zonas visuales: listar/abrir vs crear) y Opción B (rutas separadas `/projects` y `/projects/new`). Recomendé A por simplicidad.
+
+---
+
+### 48. Confirmación Opción A — separación visual sin complejizar rutas
+
+> Siento que la opción A es mucho mejor, la idea es separar las ideas visuales sin necesidad de complejizar todo el front. Registra los prompts
+
+**Resultado:** Se reorganizó `project-list` en dos zonas claras en la misma ruta: (1) lista/abrir como flujo principal, (2) bloque inferior “Crear proyecto” separado visualmente. Sin rutas nuevas.
+
+---
