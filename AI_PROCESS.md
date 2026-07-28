@@ -715,3 +715,19 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Se cerró: gráfica con Chart.js; formulario de actividad colapsable (opción B). Se arranca por shell del dashboard + `status-badge` + `consolidated-panel`.
 
 ---
+
+### 51. Implementación de activity-table
+
+> Podemos seguir con activity-table
+
+**Resultado:** Se implementó `activity-table` (indicadores + semáforos + Editar/Eliminar) y se cableó al dashboard: eliminar confirma y refresca vía API; editar deja `activityToEdit` listo para el formulario.
+
+---
+
+### 52. Implementación de activity-form colapsable
+
+> Agrega el prompt, Ahora procede con el activity-form
+
+**Resultado:** Se implementó `activity-form` colapsable (opción B): crear y editar actividad; el dashboard orquesta create/update + refresh de `ProjectDetail`.
+
+---
