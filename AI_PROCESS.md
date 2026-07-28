@@ -540,3 +540,45 @@ Al correr la suite completa después del fix, aparecieron 2 fallos no relacionad
 66/66 tests en verde, ruff limpio.
 
 ---
+
+### 36. Lectura de contexto antes de iniciar el frontend
+
+> Lee el archivo context.md, y el archivo .cursor\rules\ai-process-tracking.mdc. Una vez tengas el contexto, procederemos a la creación del frontend. Cuando termines, agrega este prompt al documento de AI_PROCESS
+
+**Resultado:** Confirmé el alcance del dashboard Angular (CRUD de actividades, indicadores en tiempo real, semáforo CPI/SPI vía status machine-readable, gráfica PV/EV/AC) y que el backend ya está cerrado (API REST completa, 66 tests, redondeo a 2 decimales en presentación). Quedamos listos para arrancar el frontend; la carpeta `frontend/` existe pero está vacía.
+
+---
+
+### 37. Diseño de estructura de carpetas del frontend (solo árbol)
+
+> Antes de empezar a hacer código, quiero que realicemos la estructura de carpetas, junto a los componentes consolidados, de momento crearlos vacíos. Pásame solo el diseño de árbol y te confirmo la decisión.
+>
+> Agrega el prompt
+
+**Resultado:** Propuse 2 opciones de árbol Angular (A: por features / B: por capas) con componentes vacíos alineados al dashboard EVM (tabla, consolidado, semáforo, gráfica, formulario). Quedó pendiente de confirmación antes de generar archivos.
+
+---
+
+### 38. Confirmación de estructura frontend: Opción A
+
+> Vamos con la opción A, acá no hay relevancia en manejar una estructura híbrida.
+
+**Resultado:** Se generó el esqueleto Angular 19 en `frontend/` con la estructura por features (Opción A): `core/` (services + api.config), `shared/components/status-badge`, `features/projects` (project-list, project-dashboard), `features/activities` (activity-table, activity-form, consolidated-panel, evm-chart), y `models/` vacíos. Componentes sin lógica; build de desarrollo OK. Se descartó híbrido por ser innecesario en este alcance.
+
+---
+
+### 39. Ubicación de project-dashboard: ¿projects/ o dashboard/?
+
+> Antes de seguir, project-dashboard es mejor dejarlo en features/projects/ o dejarlo en una carpeta separada tipo features/dashboard, ya que en teoría junta cosas de projects y activities
+
+**Resultado:** Recomendé moverlo a `features/dashboard/`: no es un subdetalle de projects, sino la pantalla contenedora que orquesta projects + activities + consolidado + gráfica. Quedó pendiente de confirmación.
+
+---
+
+### 40. Confirmación: mover project-dashboard a features/dashboard/
+
+> Dale, múevelo y registrar esa interacción y esta también
+
+**Resultado:** Se movió `project-dashboard` de `features/projects/` a `features/dashboard/project-dashboard/`. `features/projects/` queda solo con `project-list`. Sin cambios de imports (aún no había rutas ni referencias).
+
+---
