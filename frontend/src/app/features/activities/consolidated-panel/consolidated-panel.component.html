@@ -27,25 +27,33 @@
       </h3>
       <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">BAC</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="BAC" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.total_bac) }}
           </dd>
         </div>
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">PV</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="PV" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.total_pv) }}
           </dd>
         </div>
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">EV</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="EV" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.total_ev) }}
           </dd>
         </div>
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">AC</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="AC" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.total_ac) }}
           </dd>
@@ -59,13 +67,17 @@
       </h3>
       <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">CV</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="CV" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.cv) }}
           </dd>
         </div>
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">SV</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="SV" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.sv) }}
           </dd>
@@ -79,13 +91,17 @@
       </h3>
       <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">CPI</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="CPI" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatIndex(consolidated.cpi) }}
           </dd>
         </div>
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">SPI</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="SPI" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatIndex(consolidated.spi) }}
           </dd>
@@ -99,13 +115,17 @@
       </h3>
       <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">EAC</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="EAC" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.eac) }}
           </dd>
         </div>
         <div class="rounded-md bg-slate-50 px-3 py-2">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">VAC</dt>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <app-metric-label code="VAC" />
+          </dt>
           <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
             {{ formatMoney(consolidated.vac) }}
           </dd>

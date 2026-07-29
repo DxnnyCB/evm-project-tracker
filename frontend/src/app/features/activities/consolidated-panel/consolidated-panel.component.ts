@@ -1,12 +1,13 @@
 import { Component, Input } from '@angular/core';
 
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { MetricLabelComponent } from '../../../shared/components/metric-label/metric-label.component';
 import { ProjectConsolidatedIndicators } from '../../../models/project.model';
 import { formatIndex, formatMoney } from '../../../shared/utils/format';
 
 @Component({
   selector: 'app-consolidated-panel',
-  imports: [StatusBadgeComponent],
+  imports: [StatusBadgeComponent, MetricLabelComponent],
   templateUrl: './consolidated-panel.component.html',
   styleUrl: './consolidated-panel.component.css',
 })

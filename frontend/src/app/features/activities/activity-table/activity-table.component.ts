@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { MetricLabelComponent } from '../../../shared/components/metric-label/metric-label.component';
 import { ActivityWithIndicators } from '../../../models/activity.model';
 import { CpiStatus, SpiStatus } from '../../../models/evm-status.model';
 import { formatIndex, formatMoney } from '../../../shared/utils/format';
 
 @Component({
   selector: 'app-activity-table',
-  imports: [StatusBadgeComponent],
+  imports: [StatusBadgeComponent, MetricLabelComponent],
   templateUrl: './activity-table.component.html',
   styleUrl: './activity-table.component.css',
 })
