@@ -944,3 +944,11 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** Se implementó `shared/utils/format.ts` con `formatMoney` / `formatMoneyCompact` (`es-CO`, COP). Tabla: grupos Base / EVM / Índices / Proyección + montos en COP. Consolidado: mismas secciones. Gráfica: tooltips COP y eje compacto. CPI/SPI sin moneda. Formulario y API sin cambios.
 
 ---
+
+### 65. Tooltips en encabezados de siglas EVM
+
+> Listo, ahora un cambio adicional, me gustaría tener una especie de tooltip a los encabezados de las siglas EVM para las personas que no estén familiarizadas del todo con el concepto, cómo lo manejarías? agrega este prompt
+
+**Resultado:** Cursor propuso un glosario compartido + componente ligero de etiqueta con tooltip Tailwind (hover/focus), reutilizado en tabla y consolidado; sin librerías nuevas. Tras confirmación ("Listo, aplica el cambio"), se implementó `evm-glossary.ts` + `MetricLabelComponent` y se cableó en `activity-table` y `consolidated-panel`.
+
+---
