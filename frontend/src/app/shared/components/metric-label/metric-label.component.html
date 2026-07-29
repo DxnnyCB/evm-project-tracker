@@ -1,0 +1,16 @@
+<span class="group relative inline-flex max-w-full cursor-help">
+  <button
+    type="button"
+    class="m-0 border-0 bg-transparent p-0 text-inherit cursor-help underline decoration-dotted decoration-slate-400 underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+    [attr.aria-describedby]="tipId"
+  >
+    {{ displayLabel }}
+  </button>
+  <span
+    [id]="tipId"
+    role="tooltip"
+    class="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-56 -translate-x-1/2 rounded-md border border-slate-200 bg-slate-900 px-2.5 py-2 text-left text-xs font-normal normal-case tracking-normal text-white shadow-lg group-hover:block group-focus-within:block"
+  >
+    {{ description }}
+  </span>
+</span>

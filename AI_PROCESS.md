@@ -923,3 +923,32 @@ resultado fue una decisión mejor que la posición inicial de cualquiera de los 
 **Resultado:** En el header del dashboard agregué edición inline del nombre (Editar → input + Guardar/Cancelar) vía `PATCH /projects/{id}` ya expuesto en `ProjectService.update`, con toast de éxito/error.
 
 ---
+
+### 63. Agrupación visual y formato de moneda para montos vs índices
+
+> Identifiqué algo más, le expliqué este proyecto a conocidos y me dijeron que no hay peso visual para identificar valores en pesos y cálculos/índices en el proyecto. Me gustaría hacer lo siguiente:
+>
+> 1. Agrupación
+> 2. Formato de moneda en los valores monetarios
+>
+> Valida la información y dime qué te parece la propuesta y cómo la abordarías. Añade este prompt
+
+**Resultado:** Validé el hallazgo contra la UI actual (tabla y consolidado muestran strings crudos de la API, sin símbolo de moneda ni tipografía distinta entre montos e índices). Cursor propuso reforzar agrupación + helper de formato monetario reutilizable; sin implementación aún — pendiente de confirmación.
+
+---
+
+### 64. Confirmación: formato COP para montos vs índices
+
+> Me encanta la propuesta. Voy con el formato COP. Registra el prompt
+
+**Resultado:** Se implementó `shared/utils/format.ts` con `formatMoney` / `formatMoneyCompact` (`es-CO`, COP). Tabla: grupos Base / EVM / Índices / Proyección + montos en COP. Consolidado: mismas secciones. Gráfica: tooltips COP y eje compacto. CPI/SPI sin moneda. Formulario y API sin cambios.
+
+---
+
+### 65. Tooltips en encabezados de siglas EVM
+
+> Listo, ahora un cambio adicional, me gustaría tener una especie de tooltip a los encabezados de las siglas EVM para las personas que no estén familiarizadas del todo con el concepto, cómo lo manejarías? agrega este prompt
+
+**Resultado:** Cursor propuso un glosario compartido + componente ligero de etiqueta con tooltip Tailwind (hover/focus), reutilizado en tabla y consolidado; sin librerías nuevas. Tras confirmación ("Listo, aplica el cambio"), se implementó `evm-glossary.ts` + `MetricLabelComponent` y se cableó en `activity-table` y `consolidated-panel`.
+
+---
