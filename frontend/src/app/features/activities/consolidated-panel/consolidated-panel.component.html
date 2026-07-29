@@ -20,68 +20,99 @@
     </div>
   </div>
 
-  <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">BAC</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ consolidated.total_bac }}
-      </dd>
+  <div class="space-y-5">
+    <div>
+      <h3 class="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Montos base
+      </h3>
+      <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">BAC</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.total_bac) }}
+          </dd>
+        </div>
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">PV</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.total_pv) }}
+          </dd>
+        </div>
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">EV</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.total_ev) }}
+          </dd>
+        </div>
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">AC</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.total_ac) }}
+          </dd>
+        </div>
+      </dl>
     </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">PV</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ consolidated.total_pv }}
-      </dd>
+
+    <div class="border-t border-slate-100 pt-4">
+      <h3 class="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Variaciones
+      </h3>
+      <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">CV</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.cv) }}
+          </dd>
+        </div>
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">SV</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.sv) }}
+          </dd>
+        </div>
+      </dl>
     </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">EV</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ consolidated.total_ev }}
-      </dd>
+
+    <div class="border-t border-slate-100 pt-4">
+      <h3 class="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Índices
+      </h3>
+      <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">CPI</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatIndex(consolidated.cpi) }}
+          </dd>
+        </div>
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">SPI</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatIndex(consolidated.spi) }}
+          </dd>
+        </div>
+      </dl>
     </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">AC</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ consolidated.total_ac }}
-      </dd>
+
+    <div class="border-t border-slate-100 pt-4">
+      <h3 class="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Proyección
+      </h3>
+      <dl class="m-0 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">EAC</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.eac) }}
+          </dd>
+        </div>
+        <div class="rounded-md bg-slate-50 px-3 py-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">VAC</dt>
+          <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
+            {{ formatMoney(consolidated.vac) }}
+          </dd>
+        </div>
+      </dl>
     </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">CV</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ consolidated.cv }}
-      </dd>
-    </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">SV</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ consolidated.sv }}
-      </dd>
-    </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">CPI</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ formatIndex(consolidated.cpi) }}
-      </dd>
-    </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">SPI</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ formatIndex(consolidated.spi) }}
-      </dd>
-    </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">EAC</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ formatIndex(consolidated.eac) }}
-      </dd>
-    </div>
-    <div class="rounded-md bg-slate-50 px-3 py-2">
-      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">VAC</dt>
-      <dd class="m-0 mt-1 font-semibold tabular-nums text-slate-900">
-        {{ formatIndex(consolidated.vac) }}
-      </dd>
-    </div>
-  </dl>
+  </div>
 
   <div class="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
     <p class="m-0">

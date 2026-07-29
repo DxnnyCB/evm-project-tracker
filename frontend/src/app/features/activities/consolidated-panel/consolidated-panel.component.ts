@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { ProjectConsolidatedIndicators } from '../../../models/project.model';
+import { formatIndex, formatMoney } from '../../../shared/utils/format';
 
 @Component({
   selector: 'app-consolidated-panel',
@@ -11,6 +12,9 @@ import { ProjectConsolidatedIndicators } from '../../../models/project.model';
 })
 export class ConsolidatedPanelComponent {
   @Input({ required: true }) consolidated!: ProjectConsolidatedIndicators;
+
+  readonly formatMoney = formatMoney;
+  readonly formatIndex = formatIndex;
 
   cpiLabel(): string {
     switch (this.consolidated.cpi_status) {
@@ -42,9 +46,5 @@ export class ConsolidatedPanelComponent {
       default:
         return 'Datos insuficientes';
     }
-  }
-
-  formatIndex(value: string | null): string {
-    return value ?? '—';
   }
 }

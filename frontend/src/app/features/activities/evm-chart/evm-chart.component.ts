@@ -11,6 +11,7 @@ import {
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 
 import { ActivityWithIndicators } from '../../../models/activity.model';
+import { formatMoney, formatMoneyCompact } from '../../../shared/utils/format';
 
 Chart.register(...registerables);
 
@@ -150,13 +151,7 @@ export class EvmChartComponent implements AfterViewInit, OnChanges, OnDestroy {
             callbacks: {
               label: (context) => {
                 const value = context.parsed.y;
-                const formatted =
-                  value === null || value === undefined
-                    ? '—'
-                    : value.toLocaleString('es-CO', {
-                        maximumFractionDigits: 2,
-                      });
-                return `${context.dataset.label}: ${formatted}`;
+                return `${context.dataset.label}: ${formatMoney(value)}`;
               },
             },
           },
@@ -172,13 +167,11 @@ export class EvmChartComponent implements AfterViewInit, OnChanges, OnDestroy {
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Valor',
+              text: 'Valor (COP)',
             },
             ticks: {
               callback: (value) =>
-                typeof value === 'number'
-                  ? value.toLocaleString('es-CO', { maximumFractionDigits: 0 })
-                  : value,
+                typeof value === 'number' ? formatMoneyCompact(value) : value,
             },
           },
         },
